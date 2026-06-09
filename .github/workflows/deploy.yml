@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Inject config from GitHub Secrets
+        run: |
+          cat > assets/js/config.js << EOF
+          const CONFIG = {
+            SHEETS_API_KEY: "${{ secrets.SHEETS_API_KEY }}",
+            SHEET_ID: "${{ secrets.SHEET_ID }}",
+            SHEET_NAME: "${{ secrets.SHEET_NAME || 'Sheet1' }}",
+            COL_NUMBER: 0,
+            COL_NAME: 1,
+            COL_DATA_START: 2,
+            COL_TOTAL: -1,
+            ADMIN_PASSKEY: "${{ secrets.ADMIN_PASSKEY }}",
+            STREAK_MIN_DAYS: 7,
+            CONTEST_START: "2026-06-12",
+            CONTEST_END: "2026-07-19",
+          };
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          exclude_assets: '.github,config.example.js,README.md'

@@ -1,0 +1,41 @@
+// ─────────────────────────────────────────────
+//  FOOTBALISM WC 2026 — Configuration Template
+//  Copy this file to config.js and fill in your values.
+//  config.js is gitignored and should NEVER be committed.
+// ─────────────────────────────────────────────
+
+const CONFIG = {
+  // Google Sheets API key (restricted to Sheets API + your domain)
+  SHEETS_API_KEY: "YOUR_API_KEY_HERE",
+
+  // football-data.org API token (free tier, register at football-data.org)
+  FOOTBALL_API_KEY: atob("ODM0MWM5YjU4MDUzNDhkZDkxNzcxOGQ4ZmZiYzljMDc="),
+
+  // The ID from your Google Sheet URL:
+  // https://docs.google.com/spreadsheets/d/SHEET_ID_IS_HERE/edit
+  SHEET_ID: "YOUR_SHEET_ID_HERE",
+
+  // The exact name of the tab/sheet inside the spreadsheet
+  SHEET_NAME: "Sheet1",
+
+  // Column index (0-based) for player number and name
+  COL_NUMBER: 0,
+  COL_NAME: 1,
+
+  // Column index where match day data starts (after NO. and NAME)
+  COL_DATA_START: 2,
+
+  // Column index of the TOTAL column (last data column)
+  // Set to -1 to auto-calculate from the last column
+  COL_TOTAL: -1,
+
+  // Admin panel passkey (change this to something only you know)
+  ADMIN_PASSKEY: "footbalism2026",
+
+  // How many days of data before showing streak/potential badges
+  STREAK_MIN_DAYS: 7,
+
+  // Contest dates
+  CONTEST_START: "2026-06-12",
+  CONTEST_END: "2026-07-19",
+};

@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "source": "manual_upload",
+    "uploaded_at": "",
+    "note": "This file is used as a fallback when the Google Sheets API is unavailable. Upload fresh data via admin.html."
+  },
+  "matchdays": [
+    "Jun 12", "Jun 13", "Jun 14", "Jun 15", "Jun 16", "Jun 17",
+    "Jun 18", "Jun 19", "Jun 20", "Jun 21", "Jun 22", "Jun 23",
+    "Jun 24", "Jun 25", "Jun 26", "Jun 27", "Jun 28", "Jun 29",
+    "Jun 30", "Jul 1",  "Jul 2",  "Jul 3",  "Jul 4",  "Jul 4",
+    "Jul 5",  "Jul 6",  "Jul 7",  "Jul 8",  "Jul 10", "Jul 11",
+    "Jul 12", "Jul 15", "Jul 16", "Jul 19", "Jul 20"
+  ],
+  "stages": {
+    "MD1":     [0, 7],
+    "MD2":     [8, 15],
+    "MD3":     [16, 18],
+    "RO32":    [19, 24],
+    "RO16":    [25, 27],
+    "Quarter": [28, 29],
+    "Semi":    [30, 30],
+    "Third":   [31, 31],
+    "Final":   [32, 33]
+  },
+  "players": [
+    {
+      "no": 1,
+      "name": "Sample Player",
+      "scores": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      "total": 0
+    }
+  ]
+}
