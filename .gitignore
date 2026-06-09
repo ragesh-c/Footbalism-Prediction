@@ -1,0 +1,13 @@
+# API credentials - NEVER commit this
+assets/js/config.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Node (if used locally)
+node_modules/
