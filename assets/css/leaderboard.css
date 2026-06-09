@@ -186,6 +186,10 @@
   color: var(--c-white);
   display: block;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
 }
 .lb-cell--name { display: flex; flex-direction: column; gap: 4px; }
 
@@ -349,7 +353,10 @@
 @media (max-width: 480px) {
   .lb-cell--points { width: 80px; }
   .points-value { font-size: var(--text-xl); }
-  .player-name { font-size: var(--text-sm); }
+  .player-name {
+    font-size: var(--text-sm);
+    max-width: 110px;
+  }
 }
 
 /* ── Fixtures Panel ── */
@@ -580,6 +587,7 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--c-white);
+  min-width: 0;
 }
 
 .fixture-row__team--home {
@@ -943,6 +951,9 @@
   }
   .groups-grid {
     grid-template-columns: 1fr;
+  }
+  .gt-team-name {
+    max-width: 90px;
   }
 }
 
