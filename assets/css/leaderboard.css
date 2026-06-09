@@ -1078,3 +1078,24 @@
   color: var(--c-white);
   line-height: 1.2;
 }
+
+/* Fixtures filter stack on mobile */
+@media (max-width: 576px) {
+  .fixtures-panel__filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-sm);
+  }
+  .filter-pills-left {
+    justify-content: center;
+    width: 100%;
+  }
+  .filter-pills-right {
+    justify-content: stretch;
+    width: 100%;
+  }
+  .search-filter-input {
+    max-width: none;
+    flex-grow: 1;
+  }
+}

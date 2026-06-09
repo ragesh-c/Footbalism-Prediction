@@ -202,3 +202,26 @@ a { color: inherit; text-decoration: none; }
     transform: none;
   }
 }
+
+/* ── Mobile Layout Optimizations ── */
+@media (max-width: 576px) {
+  .container {
+    padding: 0 var(--sp-md); /* Reduce padding to 16px to save screen space */
+  }
+  .nav {
+    padding: 1.25rem 0;
+  }
+  .nav.nav--scrolled {
+    padding: 0.85rem 0;
+  }
+  .nav__logo {
+    font-size: 1.4rem;
+  }
+  .nav__links {
+    gap: var(--sp-md);
+  }
+  .nav__links a {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+  }
+}

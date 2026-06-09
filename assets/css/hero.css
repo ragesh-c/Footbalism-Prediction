@@ -543,3 +543,17 @@
     margin-bottom: 10px;
   }
 }
+
+@media (max-width: 480px) {
+  .hero__cta {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+    gap: var(--sp-sm);
+  }
+  .btn {
+    justify-content: center;
+    padding: 0.85rem 1.5rem;
+    width: 100%;
+  }
+}
