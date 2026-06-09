@@ -24,7 +24,10 @@
     <div class="container">
       <div class="nav__inner">
         <a href="#" class="nav__logo">F<span class="logo-emoji">⚽</span><span class="logo-emoji">⚽</span>T<span class="logo-emoji">🅱️</span><span class="logo-emoji">🅰️</span>LIS<span class="logo-emoji">Ⓜ️</span></a>
-        <ul class="nav__links">
+        <button class="nav__toggle" id="nav-toggle" aria-expanded="false" aria-label="Toggle navigation" aria-controls="nav-links">
+          <span class="nav__toggle-icon"></span>
+        </button>
+        <ul class="nav__links" id="nav-links">
           <li><a href="#leaderboard">Standings</a></li>
           <li><a href="#timeline">Schedule</a></li>
           <li><a href="#groups">Groups</a></li>
@@ -326,11 +329,58 @@
 
     // ── Boot ──
     document.addEventListener("DOMContentLoaded", () => {
-      // Nav scroll state
+      // Nav scroll state & Hamburger toggle
       const nav = document.getElementById("nav");
+      const navToggle = document.getElementById("nav-toggle");
+      const navLinks = document.getElementById("nav-links");
+
       window.addEventListener("scroll", () => {
         nav.classList.toggle("nav--scrolled", window.scrollY > 40);
       }, { passive: true });
+
+      function toggleMenu(forceClose = false) {
+        const isOpen = forceClose ? false : nav.classList.toggle("nav--open");
+        if (forceClose) {
+          nav.classList.remove("nav--open");
+        }
+        navToggle.setAttribute("aria-expanded", String(isOpen));
+        if (window.innerWidth <= 768) {
+          document.body.style.overflow = isOpen ? "hidden" : "";
+        }
+      }
+
+      navToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      // Close menu when clicking links
+      navLinks.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          toggleMenu(true);
+        });
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener("click", (e) => {
+        if (nav.classList.contains("nav--open") && !nav.contains(e.target)) {
+          toggleMenu(true);
+        }
+      });
+
+      // Close menu on escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && nav.classList.contains("nav--open")) {
+          toggleMenu(true);
+        }
+      });
+
+      // Close menu on resize if viewport expands
+      window.addEventListener("resize", () => {
+        if (window.innerWidth > 768 && nav.classList.contains("nav--open")) {
+          toggleMenu(true);
+        }
+      });
 
       // Parallax + reveal
       ParallaxController.init();
