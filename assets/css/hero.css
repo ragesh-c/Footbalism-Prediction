@@ -384,6 +384,9 @@
   line-height: 1;
   text-align: center;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 160px;
 }
 .hero__stat-value::after {
   content: '';
@@ -475,6 +478,11 @@
   color: var(--c-accent);
   letter-spacing: 0.04em;
   line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
 }
 .stats-bar__label {
   font-family: var(--f-mono);
@@ -519,10 +527,11 @@
   .hero__meta .hero__stat { min-width: 80px; }
   .hero__meta .hero__stat:nth-child(n+4) { display: none; }
   .hero__stat-value {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     padding: 6px 12px;
     height: 38px;
     min-width: 80px;
+    max-width: 95px;
   }
   .stats-bar__inner { grid-template-columns: repeat(3, 1fr); gap: var(--sp-md); }
   .stats-bar__value { font-size: var(--text-xl); }
