@@ -52,12 +52,14 @@ function emojiToCountryCode(emoji) {
   return null;
 }
 
-// Convert a flag emoji or text into a beautiful flag image using flagcdn.com CDN.
+// Convert a flag emoji or text into a beautiful flag image using jsDelivr flag-icons CDN.
+// We set alt="" (decorative) so that if the image is loading or fails to load,
+// browsers on Windows do not render the ugly country-code letters (like CZ, MX) or black flags (🏴).
 function getFlagImgHtml(flagEmoji) {
   if (!flagEmoji) return "";
   const code = emojiToCountryCode(flagEmoji);
   if (code) {
-    return `<img src="https://flagcdn.com/w40/${code}.png" srcset="https://flagcdn.com/w80/${code}.png 2x" alt="${flagEmoji}" class="flag-img" loading="lazy" />`;
+    return `<img src="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3/${code}.svg" alt="" class="flag-img" loading="lazy" />`;
   }
   return escapeHtml(flagEmoji);
 }
