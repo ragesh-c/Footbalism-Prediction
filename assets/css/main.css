@@ -28,12 +28,18 @@
   --c-contender:   #f4c542;
   --c-slipping:    #94a3b8;
 
-  /* FotMob-style table system */
+  /* FotMob-style table system — shared by EVERY table on the site
+     (.lb-table and .group-table must stay visually identical) */
   --c-card:        #1d1d1d;       /* Flat card surface */
   --c-card-hover:  #27272b;       /* Row hover */
   --c-tbl-muted:   #9f9f9f;       /* Column headers, secondary text */
   --c-qual:        #2ad572;       /* Qualification green */
   --c-qual-amber:  #e7b416;       /* Possible qualification (best 3rd) */
+  --tbl-row-h:     40px;          /* Row height */
+  --tbl-fs:        0.875rem;      /* Cell text: 14px */
+  --tbl-head-fs:   13px;          /* Header text */
+  --tbl-pad-x:     var(--sp-sm);  /* Inner cell padding: 8px */
+  --tbl-edge:      var(--sp-md);  /* Leading/trailing column edge: 16px */
 
   /* Type */
   --f-display:     'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
