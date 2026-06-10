@@ -35,6 +35,14 @@ const CONFIG = {
   // How many days of data before showing streak/potential badges
   STREAK_MIN_DAYS: 7,
 
+  // ── Live refresh cadence (milliseconds) ──
+  // Leaderboard re-polls Google Sheets at this interval
+  LEADERBOARD_REFRESH_MS: 60 * 1000,
+  // Fixtures + group standings poll when no match is live…
+  FIXTURES_REFRESH_MS: 10 * 60 * 1000,
+  // …and faster while a match is in play
+  FIXTURES_LIVE_REFRESH_MS: 2 * 60 * 1000,
+
   // Contest dates
   CONTEST_START: "2026-06-12",
   CONTEST_END: "2026-07-19",

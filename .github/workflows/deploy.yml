@@ -21,6 +21,7 @@ jobs:
           cat > assets/js/config.js << EOF
           const CONFIG = {
             SHEETS_API_KEY: "${{ secrets.SHEETS_API_KEY }}",
+            FOOTBALL_API_KEY: "${{ secrets.FOOTBALL_API_KEY }}" || atob("ODM0MWM5YjU4MDUzNDhkZDkxNzcxOGQ4ZmZiYzljMDc="),
             SHEET_ID: "${{ secrets.SHEET_ID }}",
             SHEET_NAME: "${{ secrets.SHEET_NAME || 'Sheet1' }}",
             COL_NUMBER: 0,
@@ -31,6 +32,9 @@ jobs:
             STREAK_MIN_DAYS: 7,
             CONTEST_START: "2026-06-12",
             CONTEST_END: "2026-07-19",
+            LEADERBOARD_REFRESH_MS: 60000,
+            FIXTURES_REFRESH_MS: 600000,
+            FIXTURES_LIVE_REFRESH_MS: 120000,
           };
           EOF
 

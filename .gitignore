@@ -11,3 +11,6 @@ Thumbs.db
 
 # Node (if used locally)
 node_modules/
+
+# Claude Code local tooling
+.claude/

@@ -58,6 +58,25 @@
   background: rgba(34,197,94,0.12);
   color: var(--c-rising);
   border: 1px solid rgba(34,197,94,0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.data-source--sheets::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-rising);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+
+/* ── "Updated Xs ago" label ── */
+.lb-updated {
+  font-family: var(--f-mono);
+  font-size: var(--text-xs);
+  color: var(--c-muted);
+  letter-spacing: 0.06em;
 }
 .data-source--fallback,
 .data-source--local_override {
@@ -79,16 +98,31 @@
   letter-spacing: 0.08em;
 }
 
-/* ── Loading state ── */
+/* ── Loading state (skeleton shimmer) ── */
 #leaderboard-loading {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-md);
-  padding: var(--sp-3xl);
-  color: var(--c-muted);
-  font-family: var(--f-mono);
-  font-size: var(--text-sm);
+  flex-direction: column;
+  gap: var(--sp-sm);
+  padding: var(--sp-lg) 0;
+}
+.skeleton-row {
+  height: 56px;
+  border-radius: var(--r-md);
+  background: linear-gradient(
+    100deg,
+    var(--c-surface) 40%,
+    var(--c-surface-2) 50%,
+    var(--c-surface) 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite; /* linear is right for shimmer loops */
+  border: 1px solid var(--c-border);
+}
+.skeleton-row:nth-child(2) { opacity: 0.7; }
+.skeleton-row:nth-child(3) { opacity: 0.4; }
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
 }
 .spinner {
   width: 20px; height: 20px;
@@ -153,6 +187,27 @@
 @keyframes rowIn {
   from { opacity: 0; transform: translateX(-8px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Live update effects ── */
+/* Row glow when it moves or enters on a live refresh (FLIP in leaderboard.js) */
+.lb-row--flash {
+  animation: rowFlash 1.4s ease both;
+}
+@keyframes rowFlash {
+  0%   { background-color: rgba(244,197,66,0.14); }
+  100% { background-color: transparent; }
+}
+
+/* Points value bump when a score changes */
+.points-value { display: inline-block; }
+.points-value.is-bumped {
+  animation: pointsBump 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes pointsBump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.22); color: var(--c-accent); }
+  100% { transform: scale(1); }
 }
 
 /* Cells */
@@ -1108,5 +1163,24 @@
   .search-filter-input {
     max-width: none;
     flex-grow: 1;
+  }
+}
+
+/* ── Touch targets (coarse pointers get ≥44px hit areas) ── */
+@media (pointer: coarse) {
+  .filter-pill {
+    padding: 11px 18px;
+  }
+  .icon-circle-btn,
+  .date-nav-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .date-nav-item {
+    min-height: 48px;
+    padding: 8px 14px;
+  }
+  .search-filter-input {
+    padding: 10px 16px;
   }
 }

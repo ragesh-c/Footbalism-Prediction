@@ -211,9 +211,12 @@ const FixturesAPI = (() => {
   }
 
   // Load all matches, grouped by IST date
-  async function loadMatches() {
-    const cached = cacheGet(CACHE_MATCHES);
-    if (cached) return cached;
+  // Pass { force: true } to bypass the session cache (live refresh)
+  async function loadMatches({ force = false } = {}) {
+    if (!force) {
+      const cached = cacheGet(CACHE_MATCHES);
+      if (cached) return cached;
+    }
 
     const data = await apiFetch(`/competitions/${COMP}/matches`);
 
@@ -265,9 +268,12 @@ const FixturesAPI = (() => {
   }
 
   // Load group standings
-  async function loadStandings() {
-    const cached = cacheGet(CACHE_STANDINGS);
-    if (cached) return cached;
+  // Pass { force: true } to bypass the session cache (live refresh)
+  async function loadStandings({ force = false } = {}) {
+    if (!force) {
+      const cached = cacheGet(CACHE_STANDINGS);
+      if (cached) return cached;
+    }
 
     const data = await apiFetch(`/competitions/${COMP}/standings`);
 
