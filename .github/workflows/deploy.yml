@@ -46,3 +46,6 @@ jobs:
           # .gitignore must not be published: it lists assets/js/config.js,
           # which makes the action's git-add skip the injected config.
           exclude_assets: '.github,.gitignore,config.example.js,README.md'
+          # Don't delete files already on gh-pages — the live-data workflow
+          # publishes assets/data/live/*.json there between site deploys.
+          keep_files: true

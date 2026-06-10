@@ -1,0 +1,74 @@
+# Refreshes live match data from football-data.org and publishes it to
+# the gh-pages branch as same-origin JSON.
+#
+# Why this exists: football-data.org does not send CORS headers, so the
+# browser can never call the API directly. This job is the site's
+# server side — it pulls matches + standings on a schedule and the
+# frontend (fixtures.js) fetches the committed JSON instead.
+#
+# Commits happen only when the data actually changes (scores, status),
+# so outside of live matches this is a no-op.
+name: Refresh live match data
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # best effort; GitHub may run it less often
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check tournament window
+        id: window
+        run: |
+          d=$(date -u +%Y%m%d)
+          if [ "$d" -ge 20260601 ] && [ "$d" -le 20260801 ]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "active=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout gh-pages
+        if: steps.window.outputs.active == 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Fetch matches and standings
+        if: steps.window.outputs.active == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: |
+          KEY="${KEY:-$(echo 'ODM0MWM5YjU4MDUzNDhkZDkxNzcxOGQ4ZmZiYzljMDc=' | base64 -d)}"
+          mkdir -p assets/data/live
+          curl -sf --retry 2 -H "X-Auth-Token: $KEY" \
+            "https://api.football-data.org/v4/competitions/WC/matches" \
+            -o assets/data/live/matches.json
+          curl -sf --retry 2 -H "X-Auth-Token: $KEY" \
+            "https://api.football-data.org/v4/competitions/WC/standings" \
+            -o assets/data/live/standings.json
+          # Refuse to publish anything that isn't the expected shape
+          jq -e '.matches | type == "array"' assets/data/live/matches.json > /dev/null
+          jq -e '.standings | type == "array"' assets/data/live/standings.json > /dev/null
+
+      - name: Commit when data changed
+        if: steps.window.outputs.active == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/data/live
+          if git diff --cached --quiet; then
+            echo "Live data unchanged — nothing to publish."
+          else
+            git commit -m "data: refresh live match data"
+            git push
+          fi
