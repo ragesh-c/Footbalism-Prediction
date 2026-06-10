@@ -90,14 +90,18 @@ const ParallaxController = (() => {
     });
   }
 
-  // Smooth scroll for in-page anchors
+  // Smooth scroll for in-page anchors — through Lenis when active
   function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener("click", e => {
         const target = document.querySelector(anchor.getAttribute("href"));
         if (!target) return;
         e.preventDefault();
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (window.__lenis) {
+          window.__lenis.scrollTo(target, { offset: -88, duration: 1.2 });
+        } else {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       });
     });
   }

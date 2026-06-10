@@ -77,6 +77,7 @@ const MONTHS_FULL = { "Jun": "June", "Jul": "July" };
 
 // ── Boot ──
 document.addEventListener("DOMContentLoaded", () => {
+  initLenis();
   initNav();
   ParallaxController.init();
   HeroSlideshow.init();
@@ -85,6 +86,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   boot();
 });
+
+// ── Lenis smooth scrolling ──
+// Exposed as window.__lenis so the anchor handler (parallax.js) can
+// route in-page jumps through it. Falls back to native scrolling when
+// the CDN is blocked or the user prefers reduced motion.
+function initLenis() {
+  if (typeof Lenis === "undefined") return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  window.__lenis = new Lenis({
+    autoRaf: true,
+    lerp: 0.1,          // buttery but never floaty
+    smoothWheel: true,
+    syncTouch: false    // keep native momentum on touch devices
+  });
+}
 
 async function boot() {
   await loadFixturesData();
