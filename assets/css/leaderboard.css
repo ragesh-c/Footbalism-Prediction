@@ -106,17 +106,17 @@
   padding: var(--sp-lg) 0;
 }
 .skeleton-row {
-  height: 56px;
+  height: var(--tbl-row-h);
   border-radius: var(--r-md);
   background: linear-gradient(
     100deg,
-    var(--c-surface) 40%,
-    var(--c-surface-2) 50%,
-    var(--c-surface) 60%
+    var(--c-card) 40%,
+    var(--c-card-hover) 50%,
+    var(--c-card) 60%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite; /* linear is right for shimmer loops */
-  border: 1px solid var(--c-border);
+  border: none;
 }
 .skeleton-row:nth-child(2) { opacity: 0.7; }
 .skeleton-row:nth-child(3) { opacity: 0.4; }
@@ -154,17 +154,17 @@
 }
 .lb-table th {
   font-family: var(--f-body);
-  font-size: 13px;
+  font-size: var(--tbl-head-fs);
   font-weight: 500;
   color: var(--c-tbl-muted);
   letter-spacing: 0;
   text-transform: none;
-  padding: 14px var(--sp-lg) 6px;
-  text-align: left;
+  padding: 12px var(--tbl-pad-x) 4px;
+  text-align: center;
   white-space: nowrap;
 }
-.lb-table th.th-center { text-align: center; }
-.lb-table th.th-right { text-align: right; }
+.lb-table th.th-name { text-align: left; padding-left: var(--tbl-edge); }
+.lb-table th.th-bar { text-align: left; padding-right: var(--tbl-edge); }
 
 /* Rows — borderless, hover tint only */
 .lb-row {
@@ -220,43 +220,52 @@
   100% { transform: scale(1); }
 }
 
-/* Cells */
+/* Cells — same metrics as .group-table */
 .lb-cell {
-  padding: var(--sp-md) var(--sp-lg);
+  height: var(--tbl-row-h);
+  padding: 0 var(--tbl-pad-x);
+  font-size: var(--tbl-fs);
   vertical-align: middle;
+  text-align: center;
 }
-.lb-cell--rank { width: 60px; text-align: center; }
-.lb-cell--name { min-width: 180px; }
-.lb-cell--points { width: 100px; text-align: right; white-space: nowrap; }
-.lb-cell--change { width: 60px; text-align: center; }
-.lb-cell--bar { min-width: 120px; }
+.lb-cell--rank { width: 40px; }
+.lb-cell--name { min-width: 180px; text-align: left; }
+.lb-cell--points { width: 80px; white-space: nowrap; }
+.lb-cell--change { width: 56px; }
+.lb-cell--bar { min-width: 120px; padding-right: var(--tbl-edge); }
 
 /* Rank medals */
 .rank-medal {
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   line-height: 1;
-  display: block;
+  display: inline-block;
 }
 .rank-number {
-  font-family: var(--f-display);
-  font-size: var(--text-xl);
-  color: var(--c-muted);
-  letter-spacing: 0.04em;
+  font-family: var(--f-body);
+  font-size: var(--tbl-fs);
+  font-weight: 500;
+  color: var(--c-white);
+  letter-spacing: 0;
 }
 
-/* Player name */
+/* Player name — badge sits inline beside it, like the group tables'
+   single-line team cells */
 .player-name {
-  font-weight: 600;
-  font-size: var(--text-base);
+  font-weight: 500;
+  font-size: var(--tbl-fs);
   color: var(--c-white);
-  display: block;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 170px;
 }
-.lb-cell--name { display: flex; flex-direction: column; gap: 4px; }
+.lb-cell--name {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding-left: var(--tbl-edge);
+}
 
 /* Badges */
 .badge {
@@ -293,25 +302,26 @@
   border: 1px solid rgba(148,163,184,0.2);
 }
 
-/* Points */
+/* Points — same weight/size as the group tables' PTS column */
 .points-value {
-  font-family: var(--f-display);
-  font-size: var(--text-2xl);
+  font-family: var(--f-body);
+  font-size: var(--tbl-fs);
+  font-weight: 500;
   color: var(--c-white);
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   line-height: 1;
 }
 .points-label {
-  font-family: var(--f-mono);
-  font-size: var(--text-xs);
-  color: var(--c-muted);
+  font-family: var(--f-body);
+  font-size: 0.75rem;
+  color: var(--c-tbl-muted);
   margin-left: 2px;
 }
 
 /* Rank change */
 .rank-change {
-  font-family: var(--f-mono);
-  font-size: var(--text-xs);
+  font-family: var(--f-body);
+  font-size: 0.75rem;
   font-weight: 600;
 }
 .rank-change--up { color: var(--c-rising); }
@@ -407,21 +417,15 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .lb-cell--bar { display: none; }
+  .lb-cell--bar, .lb-table .th-bar { display: none; }
   .lb-cell--change { display: none; }
-  .lb-cell { padding: var(--sp-md) var(--sp-md); }
   .section-title { font-size: var(--text-3xl); }
   .section-header { flex-direction: column; align-items: flex-start; }
   .section-meta { align-items: flex-start; }
 }
 
 @media (max-width: 480px) {
-  .lb-cell--points { width: 80px; }
-  .points-value { font-size: var(--text-xl); }
-  .player-name {
-    font-size: var(--text-sm);
-    max-width: 110px;
-  }
+  .player-name { max-width: 110px; }
 }
 
 /* ── Fixtures Panel (FotMob: transparent shell, card header, card rows) ── */
@@ -653,7 +657,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-md);
-  font-size: 0.875rem;
+  font-size: var(--tbl-fs);
   font-weight: 500;
   color: var(--c-white);
   min-width: 0;
@@ -718,7 +722,7 @@
 
 .fixture-row__time {
   font-family: var(--f-body);
-  font-size: 0.875rem;
+  font-size: var(--tbl-fs);
   color: var(--c-tbl-muted);
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -857,18 +861,18 @@
 .group-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--tbl-fs);
 }
 
 /* Column headers — 13px / 500 / #9f9f9f, no uppercase, no rule line */
 .group-table th {
   font-family: var(--f-body);
-  font-size: 13px;
+  font-size: var(--tbl-head-fs);
   font-weight: 500;
   color: var(--c-tbl-muted);
   text-transform: none;
   letter-spacing: 0;
-  padding: 12px var(--sp-sm) 4px;
+  padding: 12px var(--tbl-pad-x) 4px;
   border-bottom: none;
   text-align: center;
 }
@@ -879,13 +883,13 @@
 
 .group-table th.gt-col--team {
   text-align: left;
-  padding-left: var(--sp-md);
+  padding-left: var(--tbl-edge);
 }
 
-/* Rows — 36px, borderless, white 14px */
+/* Rows — shared height, borderless, white 14px */
 .group-table td {
-  height: 36px;
-  padding: 0 var(--sp-sm);
+  height: var(--tbl-row-h);
+  padding: 0 var(--tbl-pad-x);
   border-bottom: none;
   vertical-align: middle;
   text-align: center;
@@ -902,7 +906,7 @@
 .gt-cell--pos {
   font-family: var(--f-body);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: var(--tbl-fs);
   color: var(--c-white);
   position: relative;
   width: 40px;
@@ -929,15 +933,15 @@
 
 .gt-cell--team {
   text-align: left !important;
-  padding-left: var(--sp-md) !important;
+  padding-left: var(--tbl-edge) !important;
 }
 
 .gt-team-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 400;
-  font-size: 0.875rem;
+  gap: var(--sp-sm);
+  font-weight: 500;
+  font-size: var(--tbl-fs);
   color: var(--c-white);
 }
 
@@ -957,7 +961,7 @@
 
 .gt-cell--stat {
   font-family: var(--f-body);
-  font-size: 0.875rem;
+  font-size: var(--tbl-fs);
   color: var(--c-white);
   opacity: 0.95;
 }
@@ -977,7 +981,7 @@
   align-items: center;
 }
 .gt-next-flag--none {
-  font-size: 0.875rem;
+  font-size: var(--tbl-fs);
   color: var(--c-tbl-muted);
 }
 
