@@ -1,5 +1,7 @@
 // ─────────────────────────────────────────────
 //  parallax.js — Scroll-driven parallax layers
+//  One passive scroll listener, all effects batched
+//  into a single requestAnimationFrame write pass.
 // ─────────────────────────────────────────────
 
 const ParallaxController = (() => {
@@ -7,33 +9,35 @@ const ParallaxController = (() => {
   const layers = [];
   let ticking = false;
   let prefersReducedMotion = false;
+  let heroContent = null;
+  let heroHeight = 0;
 
   function init() {
     prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
-    // Check if native CSS scroll animations are supported
+    // When native CSS scroll-driven animations are available, hero.css
+    // animates the slideshow container itself — don't double-drive it from JS.
     const hasCSSScrollTimeline = window.CSS && CSS.supports('(animation-timeline: view()) and (animation-range: entry)');
 
-    // Register all parallax layers from DOM
     document.querySelectorAll("[data-parallax]").forEach(el => {
-      // If native CSS scroll animations are supported, skip JS parallax for those elements in hero
-      if (hasCSSScrollTimeline && (
-        el.classList.contains('hero__magazine-card') || 
-        el.classList.contains('hero__magazine-accent') || 
-        el.classList.contains('hero__watermark--bg')
-      )) {
+      if (hasCSSScrollTimeline && el.classList.contains("hero__slideshow-container")) {
         return;
       }
-
       layers.push({
         el,
-        speed: parseFloat(el.dataset.parallax) || 0.3,
-        initialY: 0
+        speed: parseFloat(el.dataset.parallax) || 0.3
       });
     });
 
-    if (layers.length === 0) return;
+    const hero = document.getElementById("hero");
+    heroContent = document.querySelector(".hero__content");
+    if (hero && heroContent) {
+      heroHeight = hero.offsetHeight;
+      window.addEventListener("resize", () => { heroHeight = hero.offsetHeight; }, { passive: true });
+    }
+
+    if (layers.length === 0 && !heroContent) return;
 
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll(); // Initial position
@@ -50,26 +54,17 @@ const ParallaxController = (() => {
     const scrollY = window.scrollY;
 
     layers.forEach(({ el, speed }) => {
-      const offset = scrollY * speed;
-      el.style.transform = `translateY(${offset}px)`;
+      el.style.transform = `translateY(${scrollY * speed}px)`;
     });
 
-    ticking = false;
-  }
-
-  // Hero section fade on scroll
-  function initHeroFade() {
-    const hero = document.getElementById("hero");
-    const heroContent = document.querySelector(".hero__content");
-    if (!hero || !heroContent || prefersReducedMotion) return;
-
-    const heroHeight = hero.offsetHeight;
-
-    window.addEventListener("scroll", () => {
-      const progress = Math.min(window.scrollY / (heroHeight * 0.6), 1);
+    // Hero content fades and drifts as you scroll past it
+    if (heroContent && heroHeight > 0) {
+      const progress = Math.min(scrollY / (heroHeight * 0.6), 1);
       heroContent.style.opacity = 1 - progress * 0.7;
       heroContent.style.transform = `translateY(${progress * 40}px)`;
-    }, { passive: true });
+    }
+
+    ticking = false;
   }
 
   // Reveal elements as they enter viewport
@@ -95,7 +90,7 @@ const ParallaxController = (() => {
     });
   }
 
-  // Smooth scroll for CTA button
+  // Smooth scroll for in-page anchors
   function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener("click", e => {
@@ -109,7 +104,6 @@ const ParallaxController = (() => {
 
   function initAll() {
     init();
-    initHeroFade();
     initScrollReveal();
     initSmoothScroll();
   }
