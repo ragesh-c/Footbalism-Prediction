@@ -605,8 +605,7 @@ async function loadGroupStandings(opts = {}) {
   standings.forEach(g => {
     const card = document.createElement("div");
     card.className = "group-card";
-    // FotMob labels groups "Grp. A"
-    const displayName = g.name.replace("GROUP_", "Grp. ").replace("Group ", "Grp. ");
+    const displayName = g.name.replace("GROUP_", "Group ");
 
     let rowsHtml = "";
     g.table.forEach(row => {
