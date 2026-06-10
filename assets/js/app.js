@@ -20,6 +20,48 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+// Parse a flag emoji and return its lowercase ISO 2-letter (or subdivision) code.
+// This resolves issues where flag emojis do not render on some browsers (e.g. Windows).
+function emojiToCountryCode(emoji) {
+  if (!emoji) return null;
+  const codePoints = Array.from(emoji).map(char => char.codePointAt(0));
+  
+  // Handle subdivision flags (e.g., Scotland, England, Wales)
+  if (codePoints[0] === 0x1F3F4) {
+    let tagString = "";
+    for (let i = 1; i < codePoints.length; i++) {
+      const cp = codePoints[i];
+      if (cp >= 0xE0030 && cp <= 0xE007E) {
+        tagString += String.fromCharCode(cp - 0xE0000);
+      }
+    }
+    if (tagString === "gbsct") return "gb-sct";
+    if (tagString === "gbeng") return "gb-eng";
+    if (tagString === "gbwls") return "gb-wls";
+    if (tagString === "gbnir") return "gb-nir";
+  }
+  
+  // Handle standard regional indicators (0x1F1E6 to 0x1F1FF)
+  const isRegionalIndicator = cp => cp >= 0x1F1E6 && cp <= 0x1F1FF;
+  if (codePoints.length >= 2 && isRegionalIndicator(codePoints[0]) && isRegionalIndicator(codePoints[1])) {
+    const char1 = String.fromCharCode(codePoints[0] - 0x1F1E6 + 65);
+    const char2 = String.fromCharCode(codePoints[1] - 0x1F1E6 + 65);
+    return (char1 + char2).toLowerCase();
+  }
+  
+  return null;
+}
+
+// Convert a flag emoji or text into a beautiful flag image using flagcdn.com CDN.
+function getFlagImgHtml(flagEmoji) {
+  if (!flagEmoji) return "";
+  const code = emojiToCountryCode(flagEmoji);
+  if (code) {
+    return `<img src="https://flagcdn.com/w40/${code}.png" srcset="https://flagcdn.com/w80/${code}.png 2x" alt="${flagEmoji}" class="flag-img" loading="lazy" />`;
+  }
+  return escapeHtml(flagEmoji);
+}
+
 // ── Shared fixtures state ──
 let CURRENT_MATCHES = MATCHES_DATA;
 let activeFixtureFilter = "filter-all";
@@ -432,7 +474,7 @@ function buildMatchRow(m) {
     <div class="fixture-row__main">
       <div class="fixture-row__team fixture-row__team--home">
         <span class="fixture-row__team-name">${escapeHtml(m.team1)}</span>
-        <span class="fixture-row__team-flag">${m.flag1}</span>
+        <span class="fixture-row__team-flag">${getFlagImgHtml(m.flag1)}</span>
       </div>
       <div class="fixture-row__center">
         <div class="${timeBoxClass}">
@@ -440,7 +482,7 @@ function buildMatchRow(m) {
         </div>
       </div>
       <div class="fixture-row__team fixture-row__team--away">
-        <span class="fixture-row__team-flag">${m.flag2}</span>
+        <span class="fixture-row__team-flag">${getFlagImgHtml(m.flag2)}</span>
         <span class="fixture-row__team-name">${escapeHtml(m.team2)}</span>
       </div>
     </div>
@@ -556,7 +598,7 @@ async function loadGroupStandings(opts = {}) {
           <td class="gt-cell--pos">${row.position}</td>
           <td class="gt-cell--team">
             <div class="gt-team-wrapper">
-              <span class="gt-team-flag">${row.team.flag}</span>
+              <span class="gt-team-flag">${getFlagImgHtml(row.team.flag)}</span>
               <span class="gt-team-name" title="${escapeHtml(row.team.name)}">${escapeHtml(row.team.short || row.team.name)}</span>
             </div>
           </td>
@@ -568,7 +610,7 @@ async function loadGroupStandings(opts = {}) {
           <td class="gt-cell--stat gt-cell--gd">${row.gd > 0 ? "+" + row.gd : row.gd}</td>
           <td class="gt-cell--stat gt-cell--pts">${row.points}</td>
           <td class="gt-cell--next">
-            ${next ? `<span class="gt-next-flag" title="${escapeHtml(next.opponent)} · ${escapeHtml(next.date)}">${next.flag}</span>` : `<span class="gt-next-flag gt-next-flag--none">–</span>`}
+            ${next ? `<span class="gt-next-flag" title="${escapeHtml(next.opponent)} · ${escapeHtml(next.date)}">${getFlagImgHtml(next.flag)}</span>` : `<span class="gt-next-flag gt-next-flag--none">–</span>`}
           </td>
         </tr>
       `;
