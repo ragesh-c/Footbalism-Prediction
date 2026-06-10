@@ -545,10 +545,12 @@ async function loadGroupStandings(opts = {}) {
   standings.forEach(g => {
     const card = document.createElement("div");
     card.className = "group-card";
-    const displayName = g.name.replace("GROUP_", "Group ");
+    // FotMob labels groups "Grp. A"
+    const displayName = g.name.replace("GROUP_", "Grp. ").replace("Group ", "Grp. ");
 
     let rowsHtml = "";
     g.table.forEach(row => {
+      const next = getNextOpponent(row.team.short || row.team.name);
       rowsHtml += `
         <tr class="gt-row">
           <td class="gt-cell--pos">${row.position}</td>
@@ -562,11 +564,11 @@ async function loadGroupStandings(opts = {}) {
           <td class="gt-cell--stat gt-cell--w">${row.won}</td>
           <td class="gt-cell--stat gt-cell--d">${row.drawn}</td>
           <td class="gt-cell--stat gt-cell--l">${row.lost}</td>
-          <td class="gt-cell--stat gt-cell--plusminus">${row.gf}:${row.ga}</td>
+          <td class="gt-cell--stat gt-cell--plusminus">${row.gf}-${row.ga}</td>
           <td class="gt-cell--stat gt-cell--gd">${row.gd > 0 ? "+" + row.gd : row.gd}</td>
           <td class="gt-cell--stat gt-cell--pts">${row.points}</td>
-          <td class="gt-cell--form">
-            ${renderFormBubbles(row.form)}
+          <td class="gt-cell--next">
+            ${next ? `<span class="gt-next-flag" title="${escapeHtml(next.opponent)} · ${escapeHtml(next.date)}">${next.flag}</span>` : `<span class="gt-next-flag gt-next-flag--none">–</span>`}
           </td>
         </tr>
       `;
@@ -580,7 +582,7 @@ async function loadGroupStandings(opts = {}) {
         <thead>
           <tr>
             <th class="gt-col--pos">#</th>
-            <th class="gt-col--team">Team</th>
+            <th class="gt-col--team"></th>
             <th class="gt-col--stat gt-col--pl">PL</th>
             <th class="gt-col--stat gt-col--w">W</th>
             <th class="gt-col--stat gt-col--d">D</th>
@@ -588,7 +590,7 @@ async function loadGroupStandings(opts = {}) {
             <th class="gt-col--stat gt-col--plusminus">+/-</th>
             <th class="gt-col--stat gt-col--gd">GD</th>
             <th class="gt-col--stat gt-col--pts">PTS</th>
-            <th class="gt-col--form">Form</th>
+            <th class="gt-col--next">Next</th>
           </tr>
         </thead>
         <tbody>
@@ -602,23 +604,15 @@ async function loadGroupStandings(opts = {}) {
   grid.replaceChildren(frag);
 }
 
-function renderFormBubbles(form) {
-  if (!form) return `<div class="form-bubbles">–</div>`;
-  const items = Array.isArray(form) ? form : form.split(",");
-  const cleaned = items.map(x => x.trim()).filter(x => x !== "");
-  if (cleaned.length === 0) return `<div class="form-bubbles">–</div>`;
-
-  let html = '<div class="form-bubbles">';
-  cleaned.slice(-5).forEach(res => {
-    let cls = "form-bubble";
-    const label = res.toUpperCase();
-    if (label === "W") cls += " form-bubble--win";
-    else if (label === "L") cls += " form-bubble--loss";
-    else if (label === "D") cls += " form-bubble--draw";
-    html += `<span class="${cls}">${label}</span>`;
-  });
-  html += "</div>";
-  return html;
+// Next fixture for a team (FotMob's "Next" column) — first non-finished
+// match in CURRENT_MATCHES featuring the team; returns the opponent's flag.
+function getNextOpponent(teamName) {
+  for (const m of CURRENT_MATCHES) {
+    if (m.status === "FINISHED") continue;
+    if (m.team1 === teamName) return { opponent: m.team2, flag: m.flag2, date: m.istDate };
+    if (m.team2 === teamName) return { opponent: m.team1, flag: m.flag1, date: m.istDate };
+  }
+  return null;
 }
 
 function getCalculatedStandings() {

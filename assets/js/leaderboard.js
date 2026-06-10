@@ -102,7 +102,7 @@ const Leaderboard = (() => {
     const showBadges = activeDays >= cfgStreakMinDays();
 
     document.getElementById("leaderboard-count").textContent =
-      `${totalPlayers} players · Day ${activeDays} of 35`;
+      `${totalPlayers} player${totalPlayers === 1 ? "" : "s"} · Day ${activeDays} of 35`;
 
     const frag = document.createDocumentFragment();
 
