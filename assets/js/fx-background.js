@@ -3,12 +3,15 @@
 //  Three.js full-screen shader quad: domain-warped fbm "paint"
 //  in the brand palette, locally swirled and lit by the cursor.
 //
-//  Perf guards: DPR capped, paused when the hero is off-screen
-//  or the tab is hidden, single static frame for reduced motion,
-//  and a silent no-op if WebGL/CDN is unavailable.
+//  Perf guards: Three.js (~600KB) is dynamically imported only on
+//  fine-pointer devices, after window load + idle, so it never
+//  competes with the LCP and never ships to phones (no cursor to
+//  react to there). DPR capped, rendering paused when the hero is
+//  off-screen or the tab is hidden, skipped for reduced motion,
+//  silent no-op if WebGL/CDN is unavailable.
 // ─────────────────────────────────────────────
 
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js";
+const THREE_URL = "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js";
 
 const VERT = /* glsl */`
   varying vec2 vUv;
@@ -113,9 +116,10 @@ const PaintedBackground = (() => {
   // Pointer state (lerped each frame for that painty lag)
   const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, glow: 0, lastX: 0.5, lastY: 0.5 };
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let THREE = null;
 
-  function init() {
+  function init(threeModule) {
+    THREE = threeModule;
     container = document.getElementById("paint-bg");
     if (!container) return;
 
@@ -146,12 +150,6 @@ const PaintedBackground = (() => {
 
     syncResolution();
     window.addEventListener("resize", () => { resize(); syncResolution(); }, { passive: true });
-
-    if (reducedMotion) {
-      renderFrame(0); // one calm, static frame
-      return;
-    }
-
     window.addEventListener("pointermove", onPointerMove, { passive: true });
 
     // Only burn GPU while the hero is actually visible
@@ -225,10 +223,25 @@ const PaintedBackground = (() => {
   return { init };
 })();
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", PaintedBackground.init);
-} else {
-  PaintedBackground.init();
-}
+// ── Bootstrap: only where it earns its keep ──
+(() => {
+  function start() {
+    if (!window.matchMedia("(pointer: fine)").matches) return;        // no cursor, no effect
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!document.getElementById("paint-bg")) return;
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 350));
+    idle(() => {
+      import(THREE_URL)
+        .then(three => PaintedBackground.init(three))
+        .catch(() => {}); // CDN blocked — hero gradient layers carry the design
+    });
+  }
+
+  if (document.readyState === "complete") {
+    start();
+  } else {
+    window.addEventListener("load", start, { once: true });
+  }
+})();
 
 window.__paintFX = PaintedBackground;

@@ -104,6 +104,30 @@ const FixturesAPI = (() => {
     return res.json();
   }
 
+  // Same-origin JSON published by .github/workflows/live-data.yml.
+  // football-data.org blocks browser CORS, so this is the primary live
+  // source; the direct API call below stays as a long-shot fallback.
+  async function liveFileFetch(name) {
+    const bust = Math.floor(Date.now() / (5 * 60 * 1000)); // 5-min CDN bucket
+    const res = await fetch(`assets/data/live/${name}?v=${bust}`);
+    if (!res.ok) throw new Error(`live data ${name}: ${res.status}`);
+    return res.json();
+  }
+
+  // Live pipeline first, direct API second
+  async function sourceFetch(file, apiPath, validate) {
+    try {
+      const data = await liveFileFetch(file);
+      if (validate(data)) {
+        console.log(`[Fixtures] Using pipeline data: ${file}`);
+        return data;
+      }
+      throw new Error(`live data ${file}: unexpected shape`);
+    } catch (err) {
+      return apiFetch(apiPath);
+    }
+  }
+
   const TEAM_NAME_MAP = {
     "Korea Republic": "South Korea",
     "Czechia": "Czech Republic",
@@ -218,7 +242,11 @@ const FixturesAPI = (() => {
       if (cached) return cached;
     }
 
-    const data = await apiFetch(`/competitions/${COMP}/matches`);
+    const data = await sourceFetch(
+      "matches.json",
+      `/competitions/${COMP}/matches`,
+      d => Array.isArray(d.matches)
+    );
 
     // Group by IST date
     const byDate = {};
@@ -275,7 +303,11 @@ const FixturesAPI = (() => {
       if (cached) return cached;
     }
 
-    const data = await apiFetch(`/competitions/${COMP}/standings`);
+    const data = await sourceFetch(
+      "standings.json",
+      `/competitions/${COMP}/standings`,
+      d => Array.isArray(d.standings)
+    );
 
     const groups = data.standings.map(g => ({
       name: g.group,
