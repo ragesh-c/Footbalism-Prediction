@@ -28,6 +28,13 @@
   --c-contender:   #f4c542;
   --c-slipping:    #94a3b8;
 
+  /* FotMob-style table system */
+  --c-card:        #1d1d1d;       /* Flat card surface */
+  --c-card-hover:  #27272b;       /* Row hover */
+  --c-tbl-muted:   #9f9f9f;       /* Column headers, secondary text */
+  --c-qual:        #2ad572;       /* Qualification green */
+  --c-qual-amber:  #e7b416;       /* Possible qualification (best 3rd) */
+
   /* Type */
   --f-display:     'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --f-body:        'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
