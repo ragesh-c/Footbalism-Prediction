@@ -678,8 +678,18 @@
 .fixture-row__team-flag {
   font-size: 1.5rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.flag-img {
+  width: 1.35em;
+  height: 0.95em;
+  object-fit: cover;
+  border-radius: 1.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   display: inline-block;
-  transform: translateY(-1px);
+  vertical-align: middle;
 }
 
 .fixture-row__center {
@@ -934,6 +944,8 @@
 .gt-team-flag {
   font-size: 1.15rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .gt-team-name {
@@ -961,6 +973,8 @@
 .gt-next-flag {
   font-size: 1.15rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 .gt-next-flag--none {
   font-size: 0.875rem;
