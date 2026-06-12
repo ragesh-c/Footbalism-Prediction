@@ -63,6 +63,12 @@ const SheetsAPI = (() => {
   // Fetch from Google Sheets API
   async function fetchFromSheets() {
     let sheetId = CONFIG.SHEET_ID;
+    if (sheetId && sheetId.includes("spreadsheets/d/")) {
+      const matches = sheetId.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (matches && matches[1]) {
+        sheetId = matches[1];
+      }
+    }
     let colNumber = CONFIG.COL_NUMBER;
     let colName = CONFIG.COL_NAME;
     let colDataStart = CONFIG.COL_DATA_START;

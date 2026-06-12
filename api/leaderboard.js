@@ -30,7 +30,13 @@ function getActiveDayCount(players) {
 }
 
 module.exports = async (req, res) => {
-  const sheetId = process.env.SHEET_ID;
+  let sheetId = process.env.SHEET_ID;
+  if (sheetId && sheetId.includes("spreadsheets/d/")) {
+    const matches = sheetId.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (matches && matches[1]) {
+      sheetId = matches[1];
+    }
+  }
   const apiKey = process.env.SHEETS_API_KEY || "";
   const sheetName = process.env.SHEET_NAME || "Sheet1";
   
