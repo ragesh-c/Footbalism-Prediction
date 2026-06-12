@@ -14,7 +14,6 @@ const CONFIG = {
   COL_NAME: 2,
   COL_DATA_START: 3,
   COL_TOTAL: -1,
-  ADMIN_PASSKEY: "${process.env.ADMIN_PASSKEY || 'footbalism2026'}",
   STREAK_MIN_DAYS: 7,
   CONTEST_START: "2026-06-12",
   CONTEST_END: "2026-07-19",
