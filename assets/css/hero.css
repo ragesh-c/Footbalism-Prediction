@@ -381,37 +381,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to bottom, #ffffff 0%, #f4f5f7 50%, #e2e5ec 51%, #f4f5f7 100%);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: var(--r-md);
-  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-xl);
+  padding: 6px 20px;
   font-family: var(--f-body);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #0a0e1a;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--c-white);
   position: relative;
   overflow: hidden;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.9),
-    0 4px 12px rgba(0, 0, 0, 0.25);
-  min-width: 100px;
-  height: 44px;
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  min-width: 90px;
+  height: 38px;
   line-height: 1;
   text-align: center;
   letter-spacing: 0.02em;
   white-space: nowrap;
   text-overflow: ellipsis;
-  max-width: 160px;
-}
-.hero__stat-value::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: rgba(0, 0, 0, 0.15);
-  z-index: 2;
+  max-width: 240px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
 }
 .hero__stat-label {
   font-family: var(--f-body);
@@ -538,15 +531,33 @@
     min-height: 100dvh;
     padding: 100px 0 50px 0;
   }
-  .hero__meta { gap: var(--sp-md); justify-content: center; }
-  .hero__meta .hero__stat { min-width: 80px; }
-  .hero__meta .hero__stat:nth-child(n+4) { display: none; }
+  .hero__meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-md) var(--sp-sm);
+    padding-top: var(--sp-lg);
+    width: 100%;
+  }
+  .hero__meta .hero__stat {
+    min-width: 0 !important;
+  }
+  .hero__meta .hero__stat:nth-child(1) { grid-column: span 1; order: 2; } /* Current Day */
+  .hero__meta .hero__stat:nth-child(3) { grid-column: span 1; order: 3; } /* Top Score */
+  .hero__meta .hero__stat:nth-child(4) { grid-column: span 1; order: 4; } /* Match Days */
+  
+  /* Leader stat spans 3 columns and is placed at the top */
+  .hero__meta .hero__stat:nth-child(2) { 
+    grid-column: span 3; 
+    order: 1; 
+    margin-bottom: var(--sp-xs);
+  }
   .hero__stat-value {
-    font-size: 0.85rem;
-    padding: 6px 12px;
-    height: 38px;
-    min-width: 80px;
-    max-width: 95px;
+    font-size: 0.875rem;
+    padding: 6px 16px;
+    height: 36px;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100%;
   }
   .stats-bar__inner { grid-template-columns: repeat(3, 1fr); gap: var(--sp-md); }
   .stats-bar__value { font-size: var(--text-xl); }
