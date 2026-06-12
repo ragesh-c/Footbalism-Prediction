@@ -420,8 +420,6 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .lb-cell--bar, .lb-table .th-bar { display: none; }
-  .lb-cell--change { display: none; }
   .section-title { font-size: var(--text-3xl); }
   .section-header { flex-direction: column; align-items: flex-start; }
   .section-meta { align-items: flex-start; }
