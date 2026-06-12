@@ -4,7 +4,7 @@
 
 const CONFIG = {
   SHEETS_API_KEY: "",
-  FOOTBALL_API_KEY: "" || atob("ODM0MWM5YjU4MDUzNDhkZDkxNzcxOGQ4ZmZiYzljMDc="),
+  FOOTBALL_API_KEY: "",
   SHEET_ID: "",
   SHEET_NAME: "Sheet1",
   COL_NUMBER: 1,

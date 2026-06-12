@@ -3,7 +3,10 @@
  * Proxies football-data.org standings API with Edge Caching.
  */
 module.exports = async (req, res) => {
-  const apiKey = process.env.FOOTBALL_API_KEY || "8341c9b5805348dd917718d8ffbc9c07";
+  const apiKey = process.env.FOOTBALL_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    return res.status(400).json({ error: "Football API Key is not configured on the server" });
+  }
   
   try {
     const apiRes = await fetch("https://api.football-data.org/v4/competitions/WC/standings", {

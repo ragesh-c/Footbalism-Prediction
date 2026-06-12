@@ -94,9 +94,7 @@ const FixturesAPI = (() => {
 
   // Fetch with auth header
   async function apiFetch(path) {
-    const key = typeof CONFIG !== "undefined"
-      ? CONFIG.FOOTBALL_API_KEY
-      : atob("ODM0MWM5YjU4MDUzNDhkZDkxNzcxOGQ4ZmZiYzljMDc=");
+    const key = (typeof CONFIG !== "undefined" && CONFIG.FOOTBALL_API_KEY) ? CONFIG.FOOTBALL_API_KEY : "";
     const res = await fetch(`${BASE}${path}`, {
       headers: { "X-Auth-Token": key }
     });
