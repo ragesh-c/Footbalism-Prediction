@@ -46,6 +46,7 @@
           <li><a href="#leaderboard">Standings</a></li>
           <li><a href="#timeline">Schedule</a></li>
           <li><a href="#groups">Groups</a></li>
+          <li><a href="#scorers">Scorers</a></li>
         </ul>
       </div>
     </div>
@@ -321,6 +322,41 @@
       <!-- Groups Grid -->
       <div class="groups-grid" id="groups-grid">
         <!-- Dynamic group tables will be injected here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Top Scorers / Golden Boot ── -->
+  <section class="scorers-section" id="scorers" data-reveal>
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <p class="section-eyebrow">FIFA World Cup 2026</p>
+          <h2 class="section-title">Golden Boot Race</h2>
+        </div>
+        <div class="section-meta">
+          <span id="scorers-source" class="data-source data-source--sheets">Source: football-data.org</span>
+        </div>
+      </div>
+      
+      <!-- Table Wrapper -->
+      <div class="lb-table-wrap">
+        <table class="lb-table" id="scorers-table" aria-label="World Cup 2026 Top Scorers">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 50px;">#</th>
+              <th class="th-name" scope="col">Player</th>
+              <th scope="col">Matches</th>
+              <th scope="col">Goals</th>
+              <th scope="col">Assists</th>
+            </tr>
+          </thead>
+          <tbody id="scorers-body">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 20px; color: var(--c-muted);">Loading scorers...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>

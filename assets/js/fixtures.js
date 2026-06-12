@@ -318,7 +318,7 @@ const FixturesAPI = (() => {
     return STADIUM_MAP[`${team1}|${team2}`] || STADIUM_MAP[`${team2}|${team1}`] || null;
   }
 
-  // Load all matches, grouped by IST date
+  // Load all matches from ESPN Scoreboard API
   // Pass { force: true } to bypass the session cache (live refresh)
   async function loadMatches({ force = false } = {}) {
     if (!force) {
@@ -326,60 +326,158 @@ const FixturesAPI = (() => {
       if (cached) return cached;
     }
 
-    const data = await sourceFetch(
-      "matches.json",
-      `/competitions/${COMP}/matches`,
-      d => Array.isArray(d.matches)
-    );
+    try {
+      console.log("[Fixtures] Fetching full World Cup schedule from ESPN...");
+      const res = await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719");
+      if (!res.ok) throw new Error(`ESPN scoreboard error: ${res.status}`);
+      const data = await res.json();
 
-    // Group by IST date
-    const byDate = {};
-    const allDates = [];
-
-    data.matches.forEach(m => {
-      const dateKey = getLocalDate(m.utcDate);
-      if (!byDate[dateKey]) {
-        byDate[dateKey] = [];
-        allDates.push(dateKey);
+      if (!data.events || !Array.isArray(data.events)) {
+        throw new Error("Invalid ESPN scoreboard shape");
       }
-      byDate[dateKey].push({
-        id: m.id,
-        utcDate: m.utcDate,
-        istDate: formatISTDate(m.utcDate),
-        istTime: formatISTTime(m.utcDate),
-        stadium: getStadium(m.homeTeam.shortName || m.homeTeam.name, m.awayTeam.shortName || m.awayTeam.name) || "TBD Stadium",
-        status: m.status,           // TIMED, SCHEDULED, IN_PLAY, PAUSED, FINISHED
-        stage: m.stage,
-        stageLabel: STAGE_LABELS[m.stage] || m.stage,
-        group: m.group ? m.group.replace("GROUP_", "Group ") : null,
-        matchday: m.matchday,
-        home: {
-          name: m.homeTeam.name,
-          short: m.homeTeam.shortName || m.homeTeam.name,
-          tla: m.homeTeam.tla,
-          crest: m.homeTeam.crest,
-          flag: getFlag(m.homeTeam.tla),
-          score: m.score.fullTime.home
-        },
-        away: {
-          name: m.awayTeam.name,
-          short: m.awayTeam.shortName || m.awayTeam.name,
-          tla: m.awayTeam.tla,
-          crest: m.awayTeam.crest,
-          flag: getFlag(m.awayTeam.tla),
-          score: m.score.fullTime.away
-        },
-        winner: m.score.winner
-      });
-    });
 
-    allDates.sort();
-    const result = { byDate, dates: allDates };
-    cacheSet(CACHE_MATCHES, result);
-    return result;
+      // Group by IST date
+      const byDate = {};
+      const allDates = [];
+
+      data.events.forEach(event => {
+        const comp = event.competitions?.[0];
+        if (!comp || !comp.competitors) return;
+
+        const home = comp.competitors.find(c => c.homeAway === "home") || comp.competitors[0];
+        const away = comp.competitors.find(c => c.homeAway === "away") || comp.competitors[1];
+
+        const homeName = normalizeTeamName(home.team?.displayName);
+        const awayName = normalizeTeamName(away.team?.displayName);
+
+        // Find match in MATCHES_DATA to inherit group/stadium
+        let groupName = "Group Stage";
+        let stadiumName = comp.venue?.fullName || "TBD Stadium";
+
+        if (typeof MATCHES_DATA !== "undefined") {
+          const staticMatch = MATCHES_DATA.find(m => {
+            const mHome = normalizeTeamName(m.team1);
+            const mAway = normalizeTeamName(m.team2);
+            return (mHome === homeName && mAway === awayName) || (mHome === awayName && mAway === homeName);
+          });
+          if (staticMatch) {
+            groupName = staticMatch.group;
+            stadiumName = staticMatch.stadium;
+          } else {
+            // Check if it's knockout stage
+            const slug = event.season?.slug || "";
+            if (slug === "round-of-32") groupName = "Round of 32";
+            else if (slug === "round-of-16") groupName = "Round of 16";
+            else if (slug === "quarter-finals") groupName = "Quarter-Finals";
+            else if (slug === "semi-finals") groupName = "Semi-Finals";
+            else if (slug === "third-place-playoff" || slug === "3rd-place-match") groupName = "Third Place";
+            else if (slug === "final") groupName = "Final";
+          }
+        }
+
+        const dateKey = getLocalDate(event.date);
+        if (!byDate[dateKey]) {
+          byDate[dateKey] = [];
+          allDates.push(dateKey);
+        }
+
+        const state = comp.status?.type?.state;
+        let status = "TIMED";
+        if (comp.status?.type?.completed || state === "post") {
+          status = "FINISHED";
+        } else if (state === "in") {
+          status = "IN_PLAY";
+        }
+
+        const scoreHome = parseInt(home.score);
+        const scoreAway = parseInt(away.score);
+
+        byDate[dateKey].push({
+          id: event.id, // ESPN Event ID
+          utcDate: event.date,
+          istDate: formatISTDate(event.date),
+          istTime: formatISTTime(event.date),
+          stadium: stadiumName,
+          status: status,
+          displayClock: comp.status?.displayClock || null, // live minutes!
+          group: groupName,
+          home: {
+            name: homeName,
+            short: home.team?.shortDisplayName || homeName,
+            tla: home.team?.abbreviation || "",
+            crest: home.team?.logo || "",
+            flag: getFlag(home.team?.abbreviation) || "🏳️",
+            score: isNaN(scoreHome) ? null : scoreHome
+          },
+          away: {
+            name: awayName,
+            short: away.team?.shortDisplayName || awayName,
+            tla: away.team?.abbreviation || "",
+            crest: away.team?.logo || "",
+            flag: getFlag(away.team?.abbreviation) || "🏳️",
+            score: isNaN(scoreAway) ? null : scoreAway
+          }
+        });
+      });
+
+      allDates.sort();
+      const result = { byDate, dates: allDates };
+      cacheSet(CACHE_MATCHES, result);
+      return result;
+
+    } catch (err) {
+      console.warn("[Fixtures] Failed to load matches from ESPN, falling back to static database:", err.message || err);
+      const byDate = {};
+      const allDates = [];
+
+      if (typeof MATCHES_DATA !== "undefined") {
+        MATCHES_DATA.forEach(m => {
+          const monthMap = { "Jun": "06", "Jul": "07" };
+          const parts = m.istDate.split(" ");
+          const month = monthMap[parts[0]];
+          const day = parts[1].padStart(2, "0");
+          const dateKey = `2026-${month}-${day}`;
+
+          if (!byDate[dateKey]) {
+            byDate[dateKey] = [];
+            allDates.push(dateKey);
+          }
+
+          byDate[dateKey].push({
+            id: m.id || null,
+            utcDate: `2026-${month}-${day}T00:00:00Z`,
+            istDate: m.istDate,
+            istTime: m.istTime,
+            stadium: m.stadium,
+            status: m.status,
+            displayClock: null,
+            group: m.group,
+            home: {
+              name: m.team1,
+              short: m.team1,
+              tla: "",
+              crest: "",
+              flag: m.flag1,
+              score: m.score1
+            },
+            away: {
+              name: m.team2,
+              short: m.team2,
+              tla: "",
+              crest: "",
+              flag: m.flag2,
+              score: m.score2
+            }
+          });
+        });
+      }
+
+      allDates.sort();
+      return { byDate, dates: allDates };
+    }
   }
 
-  // Load group standings
+  // Load group standings from ESPN V2 Standings API
   // Pass { force: true } to bypass the session cache (live refresh)
   async function loadStandings({ force = false } = {}) {
     if (!force) {
@@ -387,38 +485,75 @@ const FixturesAPI = (() => {
       if (cached) return cached;
     }
 
-    const data = await sourceFetch(
-      "standings.json",
-      `/competitions/${COMP}/standings`,
-      d => Array.isArray(d.standings)
-    );
+    try {
+      console.log("[Fixtures] Fetching live standings from ESPN...");
+      const res = await fetch("https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings");
+      if (!res.ok) throw new Error(`ESPN standings error: ${res.status}`);
+      const data = await res.json();
+      
+      if (!data.children || !Array.isArray(data.children)) {
+        throw new Error("Invalid ESPN standings shape");
+      }
 
-    const groups = data.standings.map(g => ({
-      name: g.group,
-      table: g.table.map(row => ({
-        position: row.position,
-        team: {
-          name: row.team.name,
-          short: row.team.shortName || row.team.name,
-          tla: row.team.tla,
-          crest: row.team.crest,
-          flag: getFlag(row.team.tla)
-        },
-        played: row.playedGames,
-        won: row.won,
-        drawn: row.draw,
-        lost: row.lost,
-        gf: row.goalsFor,
-        ga: row.goalsAgainst,
-        gd: row.goalDifference,
-        points: row.points,
-        form: row.form
-      }))
-    }));
+      const groups = data.children.map(g => {
+        const entries = g.standings?.entries || [];
+        const table = entries.map(row => {
+          const team = row.team || {};
+          
+          const stats = {};
+          row.stats?.forEach(s => {
+            stats[s.name] = s.value;
+          });
 
-    cacheSet(CACHE_STANDINGS, groups);
-    return groups;
+          return {
+            position: stats.rank || 1,
+            team: {
+              name: team.displayName || team.name,
+              short: team.shortDisplayName || team.displayName || team.name,
+              tla: team.abbreviation,
+              crest: team.logos?.[0]?.href || "",
+              flag: getFlag(team.abbreviation)
+            },
+            played: stats.gamesPlayed || 0,
+            won: stats.wins || 0,
+            drawn: stats.ties || 0,
+            lost: stats.losses || 0,
+            gf: stats.pointsFor || 0,
+            ga: stats.pointsAgainst || 0,
+            gd: stats.pointDifferential || 0,
+            points: stats.points || 0,
+            form: ""
+          };
+        });
+
+        return {
+          name: g.abbreviation || g.name,
+          table: table
+        };
+      });
+
+      cacheSet(CACHE_STANDINGS, groups);
+      return groups;
+    } catch (err) {
+      console.warn("[Fixtures] Failed to load standings from ESPN, falling back to calculation:", err.message || err);
+      // Fallback is handled inside app.js calling getCalculatedStandings()
+      throw err;
+    }
   }
 
-  return { loadMatches, loadStandings, getFlag, formatISTDate, formatISTTime, mergeESPNLiveScores, normalizeTeamName };
+  // Fetch top scorers from football-data.org via Vercel serverless proxy
+  async function fetchScorers() {
+    try {
+      console.log("[Fixtures] Fetching top scorers from Vercel proxy...");
+      const res = await fetch("/api/scorers");
+      if (!res.ok) throw new Error(`Scorers proxy error: ${res.status}`);
+      const data = await res.json();
+      return data.scorers || [];
+    } catch (err) {
+      console.warn("[Fixtures] Failed to fetch top scorers from proxy:", err.message || err);
+      return [];
+    }
+  }
+
+  return { loadMatches, loadStandings, getFlag, formatISTDate, formatISTTime, mergeESPNLiveScores, normalizeTeamName, fetchScorers };
 })();
