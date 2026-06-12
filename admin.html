@@ -21,71 +21,23 @@
         specific snapshot to the leaderboard.
       </p>
 
-      <!-- Auth form -->
-      <div id="admin-auth">
-        <div class="auth-form">
-          <div>
-            <label class="input-label" for="admin-pass">Passkey</label>
-            <input
-              class="input-field"
-              type="password"
-              id="admin-pass"
-              placeholder="Enter admin passkey"
-              autocomplete="current-password"
-            >
-          </div>
-          <button class="btn btn--primary" id="admin-login">Unlock Panel</button>
-        </div>
-      </div>
-
-      <!-- Admin panel (shown after auth) -->
-      <div id="admin-panel">
-
-        <div class="admin-section">
-          <p class="admin-section__title">Current Data Source</p>
-          <div id="current-source" class="source-status source-status--inactive">
-            Checking...
+      <div id="admin-container">
+        <!-- Auth form -->
+        <div id="admin-auth">
+          <div class="auth-form">
+            <div>
+              <label class="input-label" for="admin-pass">Passkey</label>
+              <input
+                class="input-field"
+                type="password"
+                id="admin-pass"
+                placeholder="Enter admin passkey"
+                autocomplete="current-password"
+              >
+            </div>
+            <button class="btn btn--primary" id="admin-login">Unlock Panel</button>
           </div>
         </div>
-
-        <div class="admin-section">
-          <p class="admin-section__title">Upload Data Override</p>
-          <p class="admin-section__desc">
-            Export your Google Sheet as <code>.json</code> using the format
-            in <code>assets/data/fallback.json</code> and upload it here.
-            This will override the live Google Sheets data until cleared.
-          </p>
-          <input type="file" id="data-upload" accept=".json" style="display:none">
-          <div class="admin-btns">
-            <button class="btn btn--primary" id="upload-btn">Choose File</button>
-            <button class="btn btn--ghost" id="clear-btn">Clear Override</button>
-          </div>
-          <div id="upload-status" class="upload-status"></div>
-        </div>
-
-        <div class="admin-section">
-          <p class="admin-section__title">JSON Format Reference</p>
-          <div class="instructions">
-            <p style="font-size: var(--text-sm); color: var(--c-muted); margin-bottom: var(--sp-md);">
-              Your uploaded JSON must follow this structure:
-            </p>
-            <ol>
-              <li>Top-level <code>players</code> array (required)</li>
-              <li>Each player: <code>{ "no", "name", "scores": [], "total" }</code></li>
-              <li><code>scores</code> is an array of numbers, one per matchday column</li>
-              <li><code>total</code> is the sum — or set to <code>0</code> to auto-calculate</li>
-              <li>See <code>assets/data/fallback.json</code> for a full example</li>
-            </ol>
-          </div>
-        </div>
-
-        <div class="admin-section">
-          <div class="admin-btns">
-            <a href="index.html" class="btn btn--ghost">← Back to Leaderboard</a>
-            <button class="btn btn--ghost" id="admin-logout">Log Out</button>
-          </div>
-        </div>
-
       </div>
     </div>
   </main>

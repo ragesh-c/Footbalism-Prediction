@@ -30,7 +30,8 @@ const CONFIG = {
   // Set to -1 to auto-calculate from the last column
   COL_TOTAL: -1,
 
-  // Admin panel passkey (change this to something only you know)
+  // Admin panel passkey (for local fallback testing only)
+  // In production (Vercel), this should be configured in environment variables as ADMIN_PASSKEY.
   ADMIN_PASSKEY: "footbalism2026",
 
   // How many days of data before showing streak/potential badges
