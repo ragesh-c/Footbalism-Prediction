@@ -6,9 +6,9 @@ const configContent = `// ──────────────────
 // ─────────────────────────────────────────────
 
 const CONFIG = {
-  SHEETS_API_KEY: "${process.env.SHEETS_API_KEY || ''}",
+  SHEETS_API_KEY: "",
   FOOTBALL_API_KEY: "${process.env.FOOTBALL_API_KEY || ''}" || atob("ODM0MWM5YjU4MDUzNDhkZDkxNzcxOGQ4ZmZiYzljMDc="),
-  SHEET_ID: "${process.env.SHEET_ID || '1EJ8MDwJg49Nuve1g-wAmp60C2rz7bLBWWBP20mXs9Mc'}",
+  SHEET_ID: "",
   SHEET_NAME: "${process.env.SHEET_NAME || 'Sheet1'}",
   COL_NUMBER: 1,
   COL_NAME: 2,
