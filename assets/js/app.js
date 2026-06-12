@@ -1143,8 +1143,11 @@ function renderLineupsTab(data, target) {
 
 // Load and render top scorers / golden boot table
 async function loadTopScorers() {
-  const body = document.getElementById("scorers-body");
-  if (!body) return;
+  const scorersList = document.getElementById("stat-list-scorers");
+  const assistsList = document.getElementById("stat-list-assists");
+  const goalsAssistsList = document.getElementById("stat-list-goals-assists");
+  
+  if (!scorersList && !assistsList && !goalsAssistsList) return;
 
   try {
     if (typeof FixturesAPI === "undefined" || typeof FixturesAPI.fetchScorers !== "function") {
@@ -1153,43 +1156,85 @@ async function loadTopScorers() {
     
     const scorers = await FixturesAPI.fetchScorers();
     
-    if (!scorers || scorers.length === 0) {
-      body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-muted);">No goalscorer data available yet.</td></tr>`;
-      return;
+    // 1. Top Scorers (Goals)
+    const topScorers = [...scorers]
+      .filter(s => (s.goals || 0) > 0)
+      .sort((a, b) => (b.goals || 0) - (a.goals || 0) || (b.assists || 0) - (a.assists || 0) || (a.playedMatches || 0) - (b.playedMatches || 0))
+      .slice(0, 5);
+
+    // 2. Assists
+    const topAssists = [...scorers]
+      .filter(s => (s.assists || 0) > 0)
+      .sort((a, b) => (b.assists || 0) - (a.assists || 0) || (b.goals || 0) - (a.goals || 0) || (a.playedMatches || 0) - (b.playedMatches || 0))
+      .slice(0, 5);
+
+    // 3. Goals + Assists
+    const topGoalsAssists = [...scorers]
+      .filter(s => ((s.goals || 0) + (s.assists || 0)) > 0)
+      .sort((a, b) => {
+        const sumA = (a.goals || 0) + (a.assists || 0);
+        const sumB = (b.goals || 0) + (b.assists || 0);
+        return sumB - sumA || (b.goals || 0) - (a.goals || 0) || (a.playedMatches || 0) - (b.playedMatches || 0);
+      })
+      .slice(0, 5);
+
+    // Helper to render a single stats card list
+    function renderStatList(list, targetEl, type, valueGetter) {
+      if (!targetEl) return;
+      if (!list || list.length === 0) {
+        let msg = "No stats available yet.";
+        if (type === "goals") msg = "No goals recorded yet.";
+        else if (type === "assists") msg = "No assists recorded yet.";
+        targetEl.innerHTML = `<div class="stat-card__empty">${msg}</div>`;
+        return;
+      }
+
+      let html = "";
+      list.forEach(s => {
+        const player = s.player || {};
+        const team = s.team || {};
+        const value = valueGetter(s);
+        const tla = team.tla || "";
+        const flag = typeof FixturesAPI.getFlag === "function" ? FixturesAPI.getFlag(tla) : "🏳️";
+
+        const nameParts = player.name ? player.name.trim().split(/\s+/) : ["P"];
+        const initials = nameParts.length > 1 
+          ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+          : nameParts[0][0].toUpperCase();
+
+        const badgeClass = type === "assists" ? "stat-player-badge--green" : "stat-player-badge--red";
+
+        html += `
+          <div class="stat-player-row">
+            <div class="stat-player-avatar" data-initials="${initials}">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div class="stat-player-info">
+              <span class="stat-player-name">${escapeHtml(player.name)}</span>
+              <span class="stat-player-team">
+                <span class="stat-player-flag">${getFlagImgHtml(flag)}</span>
+                <span class="stat-player-team-name">${escapeHtml(team.shortName || team.name)}</span>
+              </span>
+            </div>
+            <div class="stat-player-badge ${badgeClass}">
+              ${value}
+            </div>
+          </div>
+        `;
+      });
+
+      targetEl.innerHTML = html;
     }
 
-    let html = "";
-    scorers.forEach((s, idx) => {
-      const player = s.player || {};
-      const team = s.team || {};
-      const goals = s.goals || 0;
-      const assists = s.assists || 0;
-      const played = s.playedMatches || 0;
+    renderStatList(topScorers, scorersList, "goals", s => s.goals || 0);
+    renderStatList(topAssists, assistsList, "assists", s => s.assists || 0);
+    renderStatList(topGoalsAssists, goalsAssistsList, "goals-assists", s => (s.goals || 0) + (s.assists || 0));
 
-      // Map team name to flag
-      const tla = team.tla || "";
-      const flag = typeof FixturesAPI.getFlag === "function" ? FixturesAPI.getFlag(tla) : "🏳️";
-
-      html += `
-        <tr class="gt-row">
-          <td class="gt-cell--pos" style="text-align: center; width: 50px;">${idx + 1}</td>
-          <td class="gt-cell--team">
-            <div class="gt-team-wrapper">
-              <span class="gt-team-flag">${getFlagImgHtml(flag)}</span>
-              <span class="gt-team-name" style="color: #fff; font-weight: 600;">${escapeHtml(player.name)}</span>
-              <span style="font-size: 11px; color: var(--c-muted); margin-left: 6px;">(${escapeHtml(team.shortName || team.name)})</span>
-            </div>
-          </td>
-          <td style="text-align: center;">${played}</td>
-          <td style="text-align: center; font-weight: 700; color: var(--c-primary, #fbb516);">${goals}</td>
-          <td style="text-align: center;">${assists}</td>
-        </tr>
-      `;
-    });
-
-    body.innerHTML = html;
   } catch (err) {
-    console.warn("[Scorers] Failed to load top scorers:", err.message || err);
-    body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-muted);">Failed to load scorers table.</td></tr>`;
+    console.warn("[Scorers] Failed to load top stats:", err.message || err);
+    const msg = `<div class="stat-card__empty">Failed to load stats.</div>`;
+    if (scorersList) scorersList.innerHTML = msg;
+    if (assistsList) assistsList.innerHTML = msg;
+    if (goalsAssistsList) goalsAssistsList.innerHTML = msg;
   }
 }

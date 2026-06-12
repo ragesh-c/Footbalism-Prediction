@@ -326,37 +326,65 @@
     </div>
   </section>
 
-  <!-- ── Top Scorers / Golden Boot ── -->
+  <!-- ── Top Stats / Player Stats ── -->
   <section class="scorers-section" id="scorers" data-reveal>
     <div class="container">
       <div class="section-header">
         <div>
           <p class="section-eyebrow">FIFA World Cup 2026</p>
-          <h2 class="section-title">Golden Boot Race</h2>
+          <h2 class="section-title">Player Stats</h2>
         </div>
         <div class="section-meta">
           <span id="scorers-source" class="data-source data-source--sheets">Source: football-data.org</span>
         </div>
       </div>
       
-      <!-- Table Wrapper -->
-      <div class="lb-table-wrap">
-        <table class="lb-table" id="scorers-table" aria-label="World Cup 2026 Top Scorers">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 50px;">#</th>
-              <th class="th-name" scope="col">Player</th>
-              <th scope="col">Matches</th>
-              <th scope="col">Goals</th>
-              <th scope="col">Assists</th>
-            </tr>
-          </thead>
-          <tbody id="scorers-body">
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 20px; color: var(--c-muted);">Loading scorers...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Stats Cards Grid -->
+      <div class="stats-cards-grid">
+        <!-- Top Scorer Card -->
+        <div class="stat-card">
+          <div class="stat-card__header">
+            <h3 class="stat-card__title">Top Scorer</h3>
+            <span class="stat-card__chevron">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-card__list" id="stat-list-scorers">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <!-- Assists Card -->
+        <div class="stat-card">
+          <div class="stat-card__header">
+            <h3 class="stat-card__title">Assists</h3>
+            <span class="stat-card__chevron">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-card__list" id="stat-list-assists">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <!-- Goals + Assists Card -->
+        <div class="stat-card">
+          <div class="stat-card__header">
+            <h3 class="stat-card__title">Goals + Assists</h3>
+            <span class="stat-card__chevron">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-card__list" id="stat-list-goals-assists">
+            <div class="spinner"></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>

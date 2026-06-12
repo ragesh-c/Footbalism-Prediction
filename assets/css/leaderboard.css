@@ -1406,10 +1406,184 @@
   font-weight: 500;
 }
 
-/* Top Scorers section */
+/* ── Top Stats / Player Stats (FotMob Style) ── */
 .scorers-section {
-  padding: 80px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  padding: var(--sp-2xl) 0;
+  background: var(--c-bg);
+  border-top: 1px solid var(--c-border);
+}
+
+.stats-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--sp-lg);
+  margin-top: var(--sp-xl);
+}
+
+@media (min-width: 992px) {
+  .stats-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--c-card); /* flat #1d1d1d card */
+  border-radius: 16px;
+  padding: var(--sp-md) var(--sp-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0 16px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.stat-card__header:hover {
+  opacity: 0.8;
+}
+
+.stat-card__title {
+  font-family: var(--f-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--c-white);
+  letter-spacing: 0.01em;
+}
+
+.stat-card__chevron {
+  color: var(--c-muted);
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.stat-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.stat-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.stat-player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stat-player-avatar svg {
+  width: 18px;
+  height: 18px;
+  color: var(--c-muted);
+  opacity: 0.6;
+}
+
+.stat-player-avatar::after {
+  content: attr(data-initials);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2b3040 0%, #1e2230 100%);
+}
+
+.stat-player-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-player-name {
+  font-family: var(--f-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--c-white);
+}
+
+.stat-player-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-player-flag {
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.stat-player-flag .flag-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.4); /* fill the circle */
+}
+
+.stat-player-team-name {
+  font-family: var(--f-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+.stat-player-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.stat-player-badge--red {
+  background: #ce2028; /* red circle */
+}
+
+.stat-player-badge--green {
+  background: #00c06a; /* green circle */
+}
+
+.stat-card__empty {
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  color: var(--c-muted);
+  text-align: center;
+  padding: 24px 0;
 }
 
 .spinner {
