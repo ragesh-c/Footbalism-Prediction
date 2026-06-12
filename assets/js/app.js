@@ -1161,7 +1161,10 @@ async function loadTopScorers() {
         baseline.forEach(s => {
           const name = s.player?.name;
           if (!name) return;
-          const teamName = s.team?.shortName || s.team?.name || "";
+          const rawTeamName = s.team?.shortName || s.team?.name || "";
+          const teamName = typeof FixturesAPI !== "undefined" && typeof FixturesAPI.normalizeTeamName === "function"
+            ? FixturesAPI.normalizeTeamName(rawTeamName)
+            : rawTeamName;
           const tla = s.team?.tla || "";
           const flag = typeof FixturesAPI.getFlag === "function" ? FixturesAPI.getFlag(tla) : "🏳️";
           
