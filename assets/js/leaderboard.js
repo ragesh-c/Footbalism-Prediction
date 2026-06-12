@@ -139,11 +139,6 @@ const Leaderboard = (() => {
           <span class="points-label">pts</span>
         </td>
         <td class="lb-cell lb-cell--change">${changeHtml}</td>
-        <td class="lb-cell lb-cell--bar">
-          <div class="score-bar">
-            <div class="score-bar__fill" style="width: ${getBarWidth(player.total, ranked)}%"></div>
-          </div>
-        </td>
       `;
       frag.appendChild(tr);
     });
