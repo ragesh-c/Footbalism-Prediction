@@ -233,17 +233,20 @@ const Leaderboard = (() => {
   function showSource(source) {
     const sourceEl = document.getElementById("data-source");
     if (!sourceEl) return;
+    
+    if (source.startsWith("sheets")) {
+      sourceEl.style.display = "none";
+      return;
+    }
+    
+    sourceEl.style.display = "inline-block";
     const labels = {
-      sheets: "Live · Google Sheets",
-      sheets_api: "Live · Google Sheets",
-      sheets_csv: "Live · Google Sheets",
       fallback: "Using cached data",
       local_override: "Admin override active",
       empty: "No data"
     };
     sourceEl.textContent = labels[source] || source;
-    const cleanSource = source.startsWith("sheets") ? "sheets" : source;
-    sourceEl.className = `data-source data-source--${cleanSource}`;
+    sourceEl.className = `data-source data-source--${source}`;
   }
 
   function escapeName(str) {
