@@ -62,26 +62,87 @@ const SheetsAPI = (() => {
 
   // Fetch from Google Sheets API
   async function fetchFromSheets() {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(CONFIG.SHEET_NAME)}?key=${CONFIG.SHEETS_API_KEY}`;
+    let sheetId = CONFIG.SHEET_ID;
+    let colNumber = CONFIG.COL_NUMBER;
+    let colName = CONFIG.COL_NAME;
+    let colDataStart = CONFIG.COL_DATA_START;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+    // Hardcoded default fallback to user's active WC 2026 sheet if not configured
+    if (!sheetId || sheetId === "YOUR_SHEET_ID_HERE" || sheetId.trim() === "") {
+      sheetId = "1EJ8MDwJg49Nuve1g-wAmp60C2rz7bLBWWBP20mXs9Mc";
+      // The default sheet has a blank Column A, so we must map B, C, D
+      colNumber = 1;
+      colName = 2;
+      colDataStart = 3;
+    }
 
-    const json = await res.json();
-    const rows = json.values || [];
+    // Try Google Sheets API v4 if key is configured
+    if (CONFIG.SHEETS_API_KEY && CONFIG.SHEETS_API_KEY !== "YOUR_API_KEY_HERE" && CONFIG.SHEETS_API_KEY.trim() !== "") {
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(CONFIG.SHEET_NAME)}?key=${CONFIG.SHEETS_API_KEY}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          return parseRowsData(json.values || [], "sheets_api", colNumber, colName, colDataStart);
+        }
+        console.warn(`Sheets API v4 returned status ${res.status}. Falling back to public CSV export...`);
+      } catch (err) {
+        console.warn("Sheets API v4 failed. Falling back to public CSV export...", err.message);
+      }
+    }
 
-    // Skip header rows — find first row where column 0 is a number
+    // Fallback: Fetch public CSV export (CORS-friendly, no API key required)
+    console.log("[Footbalism] Fetching leaderboard from public CSV export...");
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+    const res = await fetch(csvUrl);
+    if (!res.ok) {
+      throw new Error(`Google Sheets CSV export failed: ${res.status}`);
+    }
+
+    const text = await res.text();
+    // Parse CSV rows line-by-line
+    const rows = text.split('\n').map(line => {
+      // Split by comma, trimming quotes
+      return line.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''));
+    });
+
+    return parseRowsData(rows, "sheets_csv", colNumber, colName, colDataStart);
+  }
+
+  // Helper to process rows and return standardized structure
+  function parseRowsData(rows, sourceName, colNo, colNm, colStart) {
+    // Skip header rows — find first row where column colNo is a number
     const dataRows = rows.filter(row => {
-      const first = (row[CONFIG.COL_NUMBER] || "").toString().trim();
+      const first = (row[colNo] || "").toString().trim();
       return /^\d+$/.test(first);
     });
 
+    // Parse a raw row into a player object, overriding COL_NUMBER/COL_NAME/COL_DATA_START
+    function parseLocalRow(row, rowIndex) {
+      const no = parseInt(row[colNo]) || rowIndex + 1;
+      const name = (row[colNm] || "").trim();
+      if (!name) return null;
+
+      const scores = [];
+      const totalColIndex = CONFIG.COL_TOTAL === -1
+        ? row.length - 1
+        : CONFIG.COL_TOTAL;
+
+      for (let i = colStart; i < totalColIndex; i++) {
+        scores.push(parseFloat(row[i]) || 0);
+      }
+
+      const total = parseFloat(row[totalColIndex]) || scores.reduce((a, b) => a + b, 0);
+
+      return { no, name, scores, total };
+    }
+
     const players = dataRows
-      .map((row, i) => parseRow(row, i))
+      .map((row, i) => parseLocalRow(row, i))
       .filter(Boolean);
 
     return {
-      source: "sheets",
+      source: sourceName,
       matchdays: MATCHDAY_LABELS,
       stages: STAGES,
       activeDays: getActiveDayCount(players),
