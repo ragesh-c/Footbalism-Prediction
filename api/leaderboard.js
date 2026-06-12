@@ -87,7 +87,7 @@ module.exports = async (req, res) => {
         const errText = await csvRes.text().catch(() => "");
         console.error(`[Backend] CSV fetch failed. Status: ${csvRes.status} (${csvRes.statusText}). Body snippet: ${errText.substring(0, 300)}`);
         return res.status(csvRes.status).json({ 
-          error: `Failed to fetch sheet CSV: ${csvRes.status} ${csvRes.statusText}. Snippet: ${errText.substring(0, 100)}` 
+          error: `Failed to fetch sheet CSV: ${csvRes.status} ${csvRes.statusText}. Resolved Sheet ID: "${sheetId}". Snippet: ${errText.substring(0, 100)}` 
         });
       }
       const text = await csvRes.text();
