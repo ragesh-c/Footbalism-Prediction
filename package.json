@@ -1,0 +1,7 @@
+{
+  "name": "footbalism-wc26",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node generate-config.js"
+  }
+}
