@@ -1185,3 +1185,244 @@
     padding: 10px 16px;
   }
 }
+
+/* ── Clickable Fixtures & Accordion Details ── */
+.fixture-row {
+  cursor: pointer;
+}
+
+.fixture-row__clock {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-danger, #ff4d4d);
+  background: rgba(255, 77, 77, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  display: inline-block;
+  align-self: center;
+}
+
+.fixture-row__details {
+  margin-top: var(--sp-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: var(--sp-md);
+  width: 100%;
+  cursor: default; /* Reset to default inside the accordion */
+}
+
+/* Tabs */
+.match-tabs {
+  display: flex;
+  gap: var(--sp-xs);
+  margin-bottom: var(--sp-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+}
+
+.match-tab {
+  background: transparent;
+  border: none;
+  color: var(--c-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.match-tab:hover {
+  color: #fff;
+}
+
+.match-tab--active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Stats Comparison Bars */
+.match-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px var(--sp-sm);
+}
+
+.match-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.match-stat-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.match-stat-name {
+  color: var(--c-muted);
+}
+
+.match-stat-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.match-stat-bar-container {
+  display: flex;
+  gap: 4px;
+  height: 6px;
+  width: 100%;
+}
+
+.match-stat-bar-half {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.match-stat-bar-fill {
+  height: 100%;
+  background: var(--c-primary, #fbb516);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.match-stat-bar-half--home .match-stat-bar-fill {
+  float: right;
+  background: var(--c-primary, #fbb516);
+}
+
+.match-stat-bar-half--away .match-stat-bar-fill {
+  float: left;
+  background: var(--c-secondary, #ce2028);
+}
+
+/* Timeline / Events */
+.match-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px var(--sp-sm);
+}
+
+.match-event {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+  font-size: 13px;
+  color: #fff;
+  position: relative;
+  min-height: 24px;
+}
+
+.match-event--home {
+  justify-content: flex-start;
+}
+
+.match-event--away {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.match-event__time {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-muted);
+  width: 32px;
+}
+
+.match-event__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+}
+
+.match-event__player {
+  font-weight: 500;
+}
+
+.match-event__detail {
+  font-size: 11px;
+  color: var(--c-muted);
+  margin-left: 4px;
+}
+
+/* Lineups side by side */
+.match-lineups {
+  display: flex;
+  gap: var(--sp-xl);
+  width: 100%;
+}
+
+.lineup-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.lineup-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-muted);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.lineup-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+  font-size: 13px;
+  padding: var(--sp-xs) 0;
+  color: #fff;
+}
+
+.player-item__number {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-muted);
+  width: 18px;
+  text-align: right;
+}
+
+.player-item__name {
+  font-weight: 500;
+}
+
+/* Top Scorers section */
+.scorers-section {
+  padding: 80px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.spinner {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: 20px auto;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

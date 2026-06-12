@@ -107,6 +107,7 @@ async function boot() {
   initDateNavigation();
   renderFixtures();
   loadGroupStandings();
+  loadTopScorers();
   LiveData.start();
 }
 
@@ -476,8 +477,10 @@ function buildMatchRow(m) {
 
   if (isLive) {
     timeBoxClass += " fixture-row__time-box--live";
+    const clockHtml = m.displayClock ? `<span class="fixture-row__clock">${m.displayClock}</span>` : "";
     centerHtml = `
       <span class="fixture-row__score">${m.score1} - ${m.score2}</span>
+      ${clockHtml}
       <span class="live-dot"></span>
     `;
   } else if (isFinished || hasScore) {
@@ -509,7 +512,14 @@ function buildMatchRow(m) {
       <span class="fixture-row__separator">·</span>
       <span class="fixture-row__stadium" title="${escapeHtml(m.stadium)}">${escapeHtml(m.stadium)}</span>
     </div>
+    <div class="fixture-row__details" id="details-${m.id}" style="display: none;">
+      <div class="spinner"></div>
+    </div>
   `;
+
+  // Attach click listener for accordion toggle
+  row.addEventListener("click", (e) => toggleMatchDetails(m.id, row, e));
+
   return row;
 }
 
@@ -787,6 +797,7 @@ const LiveData = (() => {
       renderFixtures();
     }
     await loadGroupStandings({ force: true });
+    await loadTopScorers();
   }
 
   function hasLiveMatch() {
@@ -848,3 +859,337 @@ const LiveData = (() => {
 
   return { start, refreshNow };
 })();
+
+// ── Match Details Accordion & ESPN Summary Integration ──
+
+// Toggle Match Details Accordion
+async function toggleMatchDetails(eventId, row, event) {
+  // Prevent toggle if clicking on tabs or inside details
+  if (event && (event.target.closest('.match-tabs') || event.target.closest('.fixture-row__details') || event.target.tagName === 'A' || event.target.tagName === 'BUTTON')) {
+    return;
+  }
+  
+  const details = row.querySelector('.fixture-row__details');
+  if (!details) return;
+
+  const isExpanded = details.style.display === "block";
+  
+  // Collapse all other expanded rows first
+  document.querySelectorAll('.fixture-row__details').forEach(el => {
+    if (el !== details) {
+      el.style.display = "none";
+      el.closest('.fixture-row').classList.remove('fixture-row--expanded');
+    }
+  });
+
+  if (isExpanded) {
+    details.style.display = "none";
+    row.classList.remove('fixture-row--expanded');
+  } else {
+    details.style.display = "block";
+    row.classList.add('fixture-row--expanded');
+    
+    // Only fetch if we haven't loaded it yet or it's currently live
+    const isLive = row.querySelector('.fixture-row__time-box--live') !== null;
+    const hasLoaded = details.dataset.loaded === "true";
+    
+    if (!hasLoaded || isLive) {
+      await fetchAndRenderSummary(eventId, details);
+    }
+  }
+}
+
+// Fetch and Render ESPN Match Summary Details
+async function fetchAndRenderSummary(eventId, container) {
+  container.innerHTML = `<div class="spinner"></div>`;
+  
+  if (!eventId) {
+    container.innerHTML = `<div style="text-align: center; color: var(--c-muted); padding: var(--sp-md);">No live details available for this match.</div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}`);
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
+    
+    container.dataset.loaded = "true";
+    renderSummaryTabs(data, container);
+  } catch (err) {
+    console.warn(`[Fixtures] Failed to fetch match summary for event ${eventId}:`, err.message || err);
+    container.innerHTML = `<div style="text-align: center; color: var(--c-muted); padding: var(--sp-md);">Details temporarily unavailable. Check back later!</div>`;
+  }
+}
+
+// Render the summary layout inside the details panel
+function renderSummaryTabs(data, container) {
+  container.innerHTML = `
+    <div class="match-tabs">
+      <button class="match-tab match-tab--active" data-tab="stats">Stats</button>
+      <button class="match-tab" data-tab="timeline">Timeline</button>
+      <button class="match-tab" data-tab="lineups">Lineups</button>
+    </div>
+    <div class="match-tab-content">
+      <!-- Active tab content goes here -->
+    </div>
+  `;
+
+  const contentDiv = container.querySelector('.match-tab-content');
+  const tabButtons = container.querySelectorAll('.match-tab');
+
+  // Helper to switch active tab
+  function showTab(tabName) {
+    tabButtons.forEach(btn => btn.classList.toggle('match-tab--active', btn.dataset.tab === tabName));
+    
+    if (tabName === 'stats') {
+      renderStatsTab(data, contentDiv);
+    } else if (tabName === 'timeline') {
+      renderTimelineTab(data, contentDiv);
+    } else if (tabName === 'lineups') {
+      renderLineupsTab(data, contentDiv);
+    }
+  }
+
+  // Setup click listeners
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showTab(btn.dataset.tab);
+    });
+  });
+
+  // Default to Stats tab
+  showTab('stats');
+}
+
+// Render Stats tab
+function renderStatsTab(data, target) {
+  const teams = data.boxscore?.teams || [];
+  const homeTeam = teams.find(t => t.homeAway === "home") || teams[0];
+  const awayTeam = teams.find(t => t.homeAway === "away") || teams[1];
+  
+  if (!homeTeam || !awayTeam || !homeTeam.statistics) {
+    target.innerHTML = `<div style="text-align: center; color: var(--c-muted); padding: var(--sp-md);">No statistics recorded for this match.</div>`;
+    return;
+  }
+
+  // Common stats we want to compare
+  const statsToCompare = [
+    { key: "possession", label: "Possession %", isPercent: true },
+    { key: "shots", label: "Total Shots" },
+    { key: "shotsOnTarget", label: "Shots on Target" },
+    { key: "cornerKicks", label: "Corner Kicks" },
+    { key: "foulsCommitted", label: "Fouls" }
+  ];
+
+  let html = `<div class="match-stats">`;
+  
+  statsToCompare.forEach(stat => {
+    const homeStatObj = homeTeam.statistics.find(s => s.name === stat.key || s.label?.toLowerCase() === stat.label.toLowerCase());
+    const awayStatObj = awayTeam.statistics.find(s => s.name === stat.key || s.label?.toLowerCase() === stat.label.toLowerCase());
+
+    const homeVal = parseFloat(homeStatObj?.displayValue) || 0;
+    const awayVal = parseFloat(awayStatObj?.displayValue) || 0;
+
+    let homePercent = 0;
+    let awayPercent = 0;
+    const total = homeVal + awayVal;
+
+    if (stat.isPercent) {
+      homePercent = homeVal;
+      awayPercent = awayVal;
+    } else if (total > 0) {
+      homePercent = (homeVal / total) * 100;
+      awayPercent = (awayVal / total) * 100;
+    }
+
+    html += `
+      <div class="match-stat-row">
+        <div class="match-stat-labels">
+          <span class="match-stat-value">${homeStatObj?.displayValue || homeVal}</span>
+          <span class="match-stat-name">${stat.label}</span>
+          <span class="match-stat-value">${awayStatObj?.displayValue || awayVal}</span>
+        </div>
+        <div class="match-stat-bar-container">
+          <div class="match-stat-bar-half match-stat-bar-half--home">
+            <div class="match-stat-bar-fill" style="width: ${homePercent}%"></div>
+          </div>
+          <div class="match-stat-bar-half match-stat-bar-half--away">
+            <div class="match-stat-bar-fill" style="width: ${awayPercent}%"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  target.innerHTML = html;
+}
+
+// Render Timeline tab (Goals, Yellow Cards, Red Cards)
+function renderTimelineTab(data, target) {
+  const events = data.keyEvents || [];
+  
+  // Filter for goals, cards
+  const filteredEvents = events.filter(e => {
+    const text = e.type?.text || "";
+    return text.startsWith("Goal") || text.endsWith("Card");
+  });
+
+  if (filteredEvents.length === 0) {
+    target.innerHTML = `<div style="text-align: center; color: var(--c-muted); padding: var(--sp-md);">No goals or cards recorded.</div>`;
+    return;
+  }
+
+  // Sort events chronologically (0 -> 90)
+  filteredEvents.sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0));
+
+  const homeTeamId = data.header?.competitions?.[0]?.competitors?.find(c => c.homeAway === "home")?.id;
+
+  let html = `<div class="match-timeline">`;
+  
+  filteredEvents.forEach(e => {
+    const text = e.type?.text || "";
+    const isHome = e.team?.id == homeTeamId;
+    const player = e.athletesInvolved?.[0]?.displayName || "Player";
+    const time = e.clock?.displayValue || `${Math.floor((e.clock?.value || 0) / 60)}'`;
+
+    let icon = "⚽";
+    let detail = "";
+    
+    if (text === "Yellow Card") {
+      icon = "🟨";
+    } else if (text === "Red Card") {
+      icon = "🟥";
+    } else if (text.includes("Penalty")) {
+      icon = "⚽";
+      detail = "(PEN)";
+    } else if (text.includes("Own Goal")) {
+      icon = "⚽";
+      detail = "(OG)";
+    }
+
+    html += `
+      <div class="match-event match-event--${isHome ? 'home' : 'away'}">
+        <span class="match-event__time">${time}</span>
+        <span class="match-event__icon">${icon}</span>
+        <span class="match-event__player">${escapeHtml(player)}<span class="match-event__detail">${detail}</span></span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  target.innerHTML = html;
+}
+
+// Render Lineups tab
+function renderLineupsTab(data, target) {
+  const rosters = data.rosters;
+  
+  if (!rosters || (!rosters['0'] && !rosters['1'])) {
+    target.innerHTML = `<div style="text-align: center; color: var(--c-muted); padding: var(--sp-md);">Lineups not announced yet.</div>`;
+    return;
+  }
+
+  const homeRosterObj = rosters['0']?.homeAway === "home" ? rosters['0'] : rosters['1']?.homeAway === "home" ? rosters['1'] : rosters['0'];
+  const awayRosterObj = rosters['0']?.homeAway === "away" ? rosters['0'] : rosters['1']?.homeAway === "away" ? rosters['1'] : rosters['1'];
+
+  function buildLineupHtml(rosterObj) {
+    if (!rosterObj || !rosterObj.roster) return '<div class="lineup-column">No lineup data.</div>';
+    
+    const startingXI = rosterObj.roster.filter(p => p.starter);
+    const subs = rosterObj.roster.filter(p => !p.starter);
+
+    let html = `
+      <div class="lineup-column">
+        <div class="lineup-title">${escapeHtml(rosterObj.team?.displayName)} ${rosterObj.formation ? `(${rosterObj.formation})` : ''}</div>
+        <div class="lineup-group-title">Starting XI</div>
+    `;
+
+    startingXI.forEach(p => {
+      html += `
+        <div class="player-item">
+          <span class="player-item__number">${p.jersey || ''}</span>
+          <span class="player-item__name">${escapeHtml(p.athlete?.displayName)}</span>
+          <span style="font-size: 10px; color: var(--c-muted); margin-left: auto;">${p.position?.abbreviation || ''}</span>
+        </div>
+      `;
+    });
+
+    if (subs.length > 0) {
+      html += `<div class="lineup-group-title" style="margin-top: 12px;">Substitutes</div>`;
+      subs.forEach(p => {
+        html += `
+          <div class="player-item">
+            <span class="player-item__number">${p.jersey || ''}</span>
+            <span class="player-item__name" style="color: var(--c-muted);">${escapeHtml(p.athlete?.displayName)}</span>
+            <span style="font-size: 10px; color: var(--c-muted); margin-left: auto;">${p.position?.abbreviation || ''}</span>
+          </div>
+        `;
+      });
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  target.innerHTML = `
+    <div class="match-lineups">
+      ${buildLineupHtml(homeRosterObj)}
+      ${buildLineupHtml(awayRosterObj)}
+    </div>
+  `;
+}
+
+// Load and render top scorers / golden boot table
+async function loadTopScorers() {
+  const body = document.getElementById("scorers-body");
+  if (!body) return;
+
+  try {
+    if (typeof FixturesAPI === "undefined" || typeof FixturesAPI.fetchScorers !== "function") {
+      throw new Error("FixturesAPI fetchScorers missing");
+    }
+    
+    const scorers = await FixturesAPI.fetchScorers();
+    
+    if (!scorers || scorers.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-muted);">No goalscorer data available yet.</td></tr>`;
+      return;
+    }
+
+    let html = "";
+    scorers.forEach((s, idx) => {
+      const player = s.player || {};
+      const team = s.team || {};
+      const goals = s.goals || 0;
+      const assists = s.assists || 0;
+      const played = s.playedMatches || 0;
+
+      // Map team name to flag
+      const tla = team.tla || "";
+      const flag = typeof FixturesAPI.getFlag === "function" ? FixturesAPI.getFlag(tla) : "🏳️";
+
+      html += `
+        <tr class="gt-row">
+          <td class="gt-cell--pos" style="text-align: center; width: 50px;">${idx + 1}</td>
+          <td class="gt-cell--team">
+            <div class="gt-team-wrapper">
+              <span class="gt-team-flag">${getFlagImgHtml(flag)}</span>
+              <span class="gt-team-name" style="color: #fff; font-weight: 600;">${escapeHtml(player.name)}</span>
+              <span style="font-size: 11px; color: var(--c-muted); margin-left: 6px;">(${escapeHtml(team.shortName || team.name)})</span>
+            </div>
+          </td>
+          <td style="text-align: center;">${played}</td>
+          <td style="text-align: center; font-weight: 700; color: var(--c-primary, #fbb516);">${goals}</td>
+          <td style="text-align: center;">${assists}</td>
+        </tr>
+      `;
+    });
+
+    body.innerHTML = html;
+  } catch (err) {
+    console.warn("[Scorers] Failed to load top scorers:", err.message || err);
+    body.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-muted);">Failed to load scorers table.</td></tr>`;
+  }
+}
