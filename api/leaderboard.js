@@ -37,6 +37,7 @@ module.exports = async (req, res) => {
       sheetId = matches[1];
     }
   }
+  console.log(`[Backend] Resolved Sheet ID: "${sheetId}"`);
   const apiKey = process.env.SHEETS_API_KEY || "";
   const sheetName = process.env.SHEET_NAME || "Sheet1";
   
@@ -76,10 +77,17 @@ module.exports = async (req, res) => {
     // 2. Fallback to CSV export if API key is not present or API call failed
     if (rows.length === 0) {
       const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-      const csvRes = await fetch(csvUrl);
+      console.log(`[Backend] Fetching CSV export from: ${csvUrl}`);
+      const csvRes = await fetch(csvUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+      });
       if (!csvRes.ok) {
+        const errText = await csvRes.text().catch(() => "");
+        console.error(`[Backend] CSV fetch failed. Status: ${csvRes.status} (${csvRes.statusText}). Body snippet: ${errText.substring(0, 300)}`);
         return res.status(csvRes.status).json({ 
-          error: `Failed to fetch sheet CSV: ${csvRes.statusText}` 
+          error: `Failed to fetch sheet CSV: ${csvRes.status} ${csvRes.statusText}. Snippet: ${errText.substring(0, 100)}` 
         });
       }
       const text = await csvRes.text();
