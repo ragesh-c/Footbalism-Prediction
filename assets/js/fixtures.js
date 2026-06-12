@@ -114,16 +114,37 @@ const FixturesAPI = (() => {
     return res.json();
   }
 
-  // Live pipeline first, direct API second
+  // Fetch from the Vercel API proxy, falling back to static JSON, and finally the direct API
   async function sourceFetch(file, apiPath, validate) {
+    const apiEndpoint = `/api/${file.replace(".json", "")}`;
+    
+    // 1. Try Vercel Serverless Function Proxy first
+    try {
+      console.log(`[Fixtures] Attempting real-time fetch from: ${apiEndpoint}`);
+      const res = await fetch(apiEndpoint);
+      if (res.ok) {
+        const data = await res.json();
+        if (validate(data)) {
+          console.log(`[Fixtures] Successfully loaded real-time data from: ${apiEndpoint}`);
+          return data;
+        }
+      }
+      console.warn(`[Fixtures] Real-time endpoint ${apiEndpoint} returned unexpected status or shape`);
+    } catch (err) {
+      console.warn(`[Fixtures] Real-time endpoint ${apiEndpoint} unavailable:`, err.message || err);
+    }
+
+    // 2. Fall back to static JSON committed to the repo
     try {
       const data = await liveFileFetch(file);
       if (validate(data)) {
-        console.log(`[Fixtures] Using pipeline data: ${file}`);
+        console.log(`[Fixtures] Using fallback static JSON: ${file}`);
         return data;
       }
-      throw new Error(`live data ${file}: unexpected shape`);
+      throw new Error(`static JSON data ${file} has unexpected shape`);
     } catch (err) {
+      console.warn(`[Fixtures] Static JSON fallback failed for ${file}:`, err.message || err);
+      // 3. Last-resort fallback: direct API call
       return apiFetch(apiPath);
     }
   }
@@ -134,7 +155,9 @@ const FixturesAPI = (() => {
     "Bosnia-H.": "Bosnia & Herzegovina",
     "Cabo Verde": "Cape Verde",
     "Congo DR": "DR Congo",
-    "Côte d'Ivoire": "Ivory Coast"
+    "Côte d'Ivoire": "Ivory Coast",
+    "United States": "USA",
+    "Türkiye": "Turkey"
   };
 
   const STADIUM_MAP = {
@@ -226,6 +249,67 @@ const FixturesAPI = (() => {
 
   function normalizeTeamName(name) {
     return TEAM_NAME_MAP[name] || name;
+  }
+
+  async function mergeESPNLiveScores(matches) {
+    try {
+      console.log("[Fixtures] Fetching live scores from ESPN...");
+      const res = await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard");
+      if (!res.ok) throw new Error(`ESPN API error: ${res.status}`);
+      const espnData = await res.json();
+      
+      if (!espnData.events || !Array.isArray(espnData.events)) {
+        return;
+      }
+
+      espnData.events.forEach(event => {
+        const comp = event.competitions?.[0];
+        if (!comp || !comp.competitors) return;
+
+        const homeCompetitor = comp.competitors.find(c => c.homeAway === "home");
+        const awayCompetitor = comp.competitors.find(c => c.homeAway === "away");
+        if (!homeCompetitor || !awayCompetitor) return;
+
+        const homeName = normalizeTeamName(homeCompetitor.team?.displayName);
+        const awayName = normalizeTeamName(awayCompetitor.team?.displayName);
+
+        // Find matching match in our schedule
+        const match = matches.find(m => {
+          const mHome = normalizeTeamName(m.team1);
+          const mAway = normalizeTeamName(m.team2);
+          return (mHome === homeName && mAway === awayName) || (mHome === awayName && mAway === homeName);
+        });
+
+        if (match) {
+          const state = comp.status?.type?.state;
+          let newStatus = "TIMED";
+          
+          if (comp.status?.type?.completed || state === "post") {
+            newStatus = "FINISHED";
+          } else if (state === "in") {
+            newStatus = "IN_PLAY";
+          }
+
+          const scoreHome = parseInt(homeCompetitor.score);
+          const scoreAway = parseInt(awayCompetitor.score);
+
+          // Update match status and scores based on home/away assignment
+          const isHomeT1 = normalizeTeamName(match.team1) === homeName;
+          if (isHomeT1) {
+            match.score1 = isNaN(scoreHome) ? null : scoreHome;
+            match.score2 = isNaN(scoreAway) ? null : scoreAway;
+          } else {
+            match.score1 = isNaN(scoreAway) ? null : scoreAway;
+            match.score2 = isNaN(scoreHome) ? null : scoreHome;
+          }
+          match.status = newStatus;
+          
+          console.log(`[Fixtures] ESPN Update: ${match.team1} ${match.score1} - ${match.score2} ${match.team2} (${newStatus})`);
+        }
+      });
+    } catch (err) {
+      console.warn("[Fixtures] Failed to merge ESPN live scores:", err.message || err);
+    }
   }
 
   function getStadium(t1, t2) {
@@ -336,5 +420,5 @@ const FixturesAPI = (() => {
     return groups;
   }
 
-  return { loadMatches, loadStandings, getFlag, formatISTDate, formatISTTime };
+  return { loadMatches, loadStandings, getFlag, formatISTDate, formatISTTime, mergeESPNLiveScores, normalizeTeamName };
 })();
