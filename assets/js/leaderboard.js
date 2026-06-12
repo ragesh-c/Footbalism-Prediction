@@ -235,12 +235,15 @@ const Leaderboard = (() => {
     if (!sourceEl) return;
     const labels = {
       sheets: "Live · Google Sheets",
+      sheets_api: "Live · Google Sheets",
+      sheets_csv: "Live · Google Sheets",
       fallback: "Using cached data",
       local_override: "Admin override active",
       empty: "No data"
     };
     sourceEl.textContent = labels[source] || source;
-    sourceEl.className = `data-source data-source--${source}`;
+    const cleanSource = source.startsWith("sheets") ? "sheets" : source;
+    sourceEl.className = `data-source data-source--${cleanSource}`;
   }
 
   function escapeName(str) {

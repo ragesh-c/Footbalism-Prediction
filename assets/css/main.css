@@ -357,3 +357,21 @@ a { color: inherit; text-decoration: none; }
     font-size: 1.35rem;
   }
 }
+
+/* ── Custom Scrollbar (Premium Dark Theme) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--c-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: var(--r-sm);
+  border: 2px solid var(--c-bg);
+  transition: background 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-muted);
+}
