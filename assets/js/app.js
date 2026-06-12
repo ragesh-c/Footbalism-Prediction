@@ -536,10 +536,10 @@ function syncStatsBar() {
 let fixturesFingerprint = "";
 
 async function loadFixturesData(opts = {}) {
+  let list = [];
   try {
     if (typeof FixturesAPI === "undefined") return false;
     const apiData = await FixturesAPI.loadMatches(opts);
-    const list = [];
     Object.values(apiData.byDate).forEach(dayMatches => {
       dayMatches.forEach(m => {
         list.push({
@@ -559,16 +559,24 @@ async function loadFixturesData(opts = {}) {
         });
       });
     });
-    if (list.length > 0) {
-      const print = JSON.stringify(list);
-      if (print === fixturesFingerprint) return false;
-      fixturesFingerprint = print;
-      CURRENT_MATCHES = list;
-      console.log("[Fixtures] Loaded live fixtures from API:", list.length);
-      return true;
-    }
   } catch (err) {
     console.warn("[Fixtures] Live fixtures unavailable, using local matches database.", err.message || err);
+    if (typeof MATCHES_DATA !== "undefined") {
+      list = JSON.parse(JSON.stringify(MATCHES_DATA));
+    }
+  }
+
+  // Always merge ESPN live scores into the loaded schedule list
+  if (list.length > 0) {
+    if (typeof FixturesAPI !== "undefined" && typeof FixturesAPI.mergeESPNLiveScores === "function") {
+      await FixturesAPI.mergeESPNLiveScores(list);
+    }
+    const print = JSON.stringify(list);
+    if (print === fixturesFingerprint) return false;
+    fixturesFingerprint = print;
+    CURRENT_MATCHES = list;
+    console.log("[Fixtures] Loaded matches (merged with ESPN live scores if active):", list.length);
+    return true;
   }
   return false;
 }
