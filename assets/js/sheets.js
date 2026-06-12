@@ -67,13 +67,8 @@ const SheetsAPI = (() => {
     let colName = CONFIG.COL_NAME;
     let colDataStart = CONFIG.COL_DATA_START;
 
-    // Hardcoded default fallback to user's active WC 2026 sheet if not configured
     if (!sheetId || sheetId === "YOUR_SHEET_ID_HERE" || sheetId.trim() === "") {
-      sheetId = "1EJ8MDwJg49Nuve1g-wAmp60C2rz7bLBWWBP20mXs9Mc";
-      // The default sheet has a blank Column A, so we must map B, C, D
-      colNumber = 1;
-      colName = 2;
-      colDataStart = 3;
+      throw new Error("Google Sheet ID is not configured locally.");
     }
 
     // Try Google Sheets API v4 if key is configured
@@ -194,13 +189,27 @@ const SheetsAPI = (() => {
       return override;
     }
 
-    // 2. Try Google Sheets
+    // 2. Try Vercel Serverless Function Proxy first (highly secure, Sheet ID is server-side)
+    try {
+      console.log("[Footbalism] Fetching leaderboard from API proxy...");
+      const res = await fetch("/api/leaderboard");
+      if (res.ok) {
+        const data = await res.json();
+        console.log("[Footbalism] Loaded from Vercel API proxy");
+        return data;
+      }
+      console.warn(`[Footbalism] Vercel API proxy returned status ${res.status}. Falling back to direct load...`);
+    } catch (err) {
+      console.warn("[Footbalism] Vercel API proxy failed. Falling back to direct load...", err.message);
+    }
+
+    // 3. Try Google Sheets directly (local dev fallback)
     try {
       const data = await fetchFromSheets();
-      console.log("[Footbalism] Loaded from Google Sheets");
+      console.log("[Footbalism] Loaded directly from Google Sheets");
       return data;
     } catch (err) {
-      console.warn("[Footbalism] Sheets API failed:", err.message);
+      console.warn("[Footbalism] Direct Sheets load failed:", err.message);
     }
 
     // 3. Fall back to static JSON
