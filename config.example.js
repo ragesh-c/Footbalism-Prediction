@@ -19,11 +19,12 @@ const CONFIG = {
   SHEET_NAME: "Sheet1",
 
   // Column index (0-based) for player number and name
-  COL_NUMBER: 0,
-  COL_NAME: 1,
+  // Note: If Column A is blank in your sheet, set COL_NUMBER: 1, COL_NAME: 2, COL_DATA_START: 3
+  COL_NUMBER: 1,
+  COL_NAME: 2,
 
   // Column index where match day data starts (after NO. and NAME)
-  COL_DATA_START: 2,
+  COL_DATA_START: 3,
 
   // Column index of the TOTAL column (last data column)
   // Set to -1 to auto-calculate from the last column
