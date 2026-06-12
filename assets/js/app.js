@@ -1150,31 +1150,161 @@ async function loadTopScorers() {
   if (!scorersList && !assistsList && !goalsAssistsList) return;
 
   try {
-    if (typeof FixturesAPI === "undefined" || typeof FixturesAPI.fetchScorers !== "function") {
-      throw new Error("FixturesAPI fetchScorers missing");
+    const playerMap = {};
+
+    // 1. Fetch scorers baseline from the Vercel proxy (football-data.org)
+    try {
+      if (typeof FixturesAPI !== "undefined" && typeof FixturesAPI.fetchScorers === "function") {
+        const baseline = await FixturesAPI.fetchScorers();
+        baseline.forEach(s => {
+          const name = s.player?.name;
+          if (!name) return;
+          const teamName = s.team?.shortName || s.team?.name || "";
+          const tla = s.team?.tla || "";
+          const flag = typeof FixturesAPI.getFlag === "function" ? FixturesAPI.getFlag(tla) : "🏳️";
+          
+          playerMap[name] = {
+            name: name,
+            teamName: teamName,
+            flag: flag,
+            goals: s.goals || 0,
+            assists: s.assists || 0
+          };
+        });
+      }
+    } catch (err) {
+      console.warn("[Scorers] Failed to load baseline scorers:", err.message || err);
     }
+
+    // 2. Scan all matches in CURRENT_MATCHES (ESPN) to backfill missing assist makers (players with 0 goals)
+    // and live goal updates since the proxy caches for 5 minutes.
+    if (typeof CURRENT_MATCHES !== "undefined" && Array.isArray(CURRENT_MATCHES)) {
+      const activeMatches = CURRENT_MATCHES.filter(m => {
+        const isLive = m.status === "IN_PLAY" || m.status === "PAUSED";
+        const isFinished = m.status === "FINISHED";
+        const hasScore = m.score1 !== null && m.score2 !== null && (m.score1 > 0 || m.score2 > 0);
+        return (isFinished || isLive) && hasScore;
+      });
+
+      const summaryPromises = activeMatches.map(async m => {
+        const isLive = m.status === "IN_PLAY" || m.status === "PAUSED";
+        const cacheKey = `espn_goals_match_${m.id}`;
+        
+        if (!isLive) {
+          const cached = localStorage.getItem(cacheKey);
+          if (cached) {
+            try { return { match: m, goals: JSON.parse(cached) }; } catch (e) {}
+          }
+        }
+
+        try {
+          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${m.id}`);
+          if (!res.ok) throw new Error(`Status ${res.status}`);
+          const data = await res.json();
+          
+          const keyEvents = data.keyEvents || [];
+          const goalEvents = keyEvents.filter(e => e.type?.text?.startsWith("Goal") || e.type?.type?.startsWith("goal"));
+          
+          const parsedGoals = [];
+          goalEvents.forEach(e => {
+            const text = e.text || "";
+            const isOwnGoal = text.includes("Own Goal");
+            const scorer = e.participants?.[0]?.athlete?.displayName || null;
+            const assister = e.participants?.[1]?.athlete?.displayName || null;
+            
+            const eventTeamName = e.team?.displayName || "";
+            let teamName = eventTeamName;
+            let flag = "🏳️";
+            
+            const mHome = typeof FixturesAPI !== "undefined" ? FixturesAPI.normalizeTeamName(m.team1) : m.team1;
+            const mAway = typeof FixturesAPI !== "undefined" ? FixturesAPI.normalizeTeamName(m.team2) : m.team2;
+            const eventTeamNorm = typeof FixturesAPI !== "undefined" ? FixturesAPI.normalizeTeamName(eventTeamName) : eventTeamName;
+            
+            if (eventTeamNorm === mHome) {
+              teamName = m.team1;
+              flag = m.flag1;
+            } else if (eventTeamNorm === mAway) {
+              teamName = m.team2;
+              flag = m.flag2;
+            }
+
+            parsedGoals.push({
+              scorer: isOwnGoal ? null : scorer,
+              assister: assister || null,
+              teamName: teamName,
+              flag: flag
+            });
+          });
+
+          if (!isLive && parsedGoals.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(parsedGoals));
+          }
+
+          return { match: m, goals: parsedGoals };
+        } catch (err) {
+          console.warn(`[Scorers] Failed to fetch summary for match ${m.team1} vs ${m.team2}:`, err.message);
+          return { match: m, goals: [] };
+        }
+      });
+
+      const results = await Promise.all(summaryPromises);
+
+      // Reset goals and assists that we will recalculate/validate via match details
+      // to avoid double counting baseline data and ensure 100% accurate assist counts
+      const scannedAssists = {};
+      const scannedGoals = {};
+
+      results.forEach(res => {
+        res.goals.forEach(g => {
+          if (g.scorer) {
+            scannedGoals[g.scorer] = (scannedGoals[g.scorer] || 0) + 1;
+            // Backfill details
+            if (!playerMap[g.scorer]) {
+              playerMap[g.scorer] = { name: g.scorer, teamName: g.teamName, flag: g.flag, goals: 0, assists: 0 };
+            }
+          }
+          if (g.assister) {
+            scannedAssists[g.assister] = (scannedAssists[g.assister] || 0) + 1;
+            // Backfill details
+            if (!playerMap[g.assister]) {
+              playerMap[g.assister] = { name: g.assister, teamName: g.teamName, flag: g.flag, goals: 0, assists: 0 };
+            }
+          }
+        });
+      });
+
+      // Update the player map with the scanned goals and assists
+      Object.keys(playerMap).forEach(name => {
+        const player = playerMap[name];
+        // If we found goals for them in the scan, align their goal count
+        if (scannedGoals[name] !== undefined) {
+          player.goals = Math.max(player.goals, scannedGoals[name]);
+        }
+        // Assists: Since football-data.org doesn't return players with 0 goals,
+        // we take the maximum of baseline assists and scanned assists to guarantee we get the full assists count!
+        player.assists = Math.max(player.assists, scannedAssists[name] || 0);
+      });
+    }
+
+    const scorers = Object.values(playerMap);
     
-    const scorers = await FixturesAPI.fetchScorers();
-    
-    // 1. Top Scorers (Goals)
+    // Sort and slice lists
     const topScorers = [...scorers]
-      .filter(s => (s.goals || 0) > 0)
-      .sort((a, b) => (b.goals || 0) - (a.goals || 0) || (b.assists || 0) - (a.assists || 0) || (a.playedMatches || 0) - (b.playedMatches || 0))
+      .filter(s => s.goals > 0)
+      .sort((a, b) => b.goals - a.goals || b.assists - a.assists || a.name.localeCompare(b.name))
       .slice(0, 5);
 
-    // 2. Assists
     const topAssists = [...scorers]
-      .filter(s => (s.assists || 0) > 0)
-      .sort((a, b) => (b.assists || 0) - (a.assists || 0) || (b.goals || 0) - (a.goals || 0) || (a.playedMatches || 0) - (b.playedMatches || 0))
+      .filter(s => s.assists > 0)
+      .sort((a, b) => b.assists - a.assists || b.goals - a.goals || a.name.localeCompare(b.name))
       .slice(0, 5);
 
-    // 3. Goals + Assists
     const topGoalsAssists = [...scorers]
-      .filter(s => ((s.goals || 0) + (s.assists || 0)) > 0)
+      .filter(s => (s.goals + s.assists) > 0)
       .sort((a, b) => {
-        const sumA = (a.goals || 0) + (a.assists || 0);
-        const sumB = (b.goals || 0) + (b.assists || 0);
-        return sumB - sumA || (b.goals || 0) - (a.goals || 0) || (a.playedMatches || 0) - (b.playedMatches || 0);
+        const sumA = a.goals + a.assists;
+        const sumB = b.goals + b.assists;
+        return sumB - sumA || b.goals - a.goals || a.name.localeCompare(b.name);
       })
       .slice(0, 5);
 
@@ -1191,13 +1321,10 @@ async function loadTopScorers() {
 
       let html = "";
       list.forEach(s => {
-        const player = s.player || {};
-        const team = s.team || {};
         const value = valueGetter(s);
-        const tla = team.tla || "";
-        const flag = typeof FixturesAPI.getFlag === "function" ? FixturesAPI.getFlag(tla) : "🏳️";
-
-        const nameParts = player.name ? player.name.trim().split(/\s+/) : ["P"];
+        
+        // Initials for avatar
+        const nameParts = s.name ? s.name.trim().split(/\s+/) : ["P"];
         const initials = nameParts.length > 1 
           ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
           : nameParts[0][0].toUpperCase();
@@ -1210,10 +1337,10 @@ async function loadTopScorers() {
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
             <div class="stat-player-info">
-              <span class="stat-player-name">${escapeHtml(player.name)}</span>
+              <span class="stat-player-name">${escapeHtml(s.name)}</span>
               <span class="stat-player-team">
-                <span class="stat-player-flag">${getFlagImgHtml(flag)}</span>
-                <span class="stat-player-team-name">${escapeHtml(team.shortName || team.name)}</span>
+                <span class="stat-player-flag">${getFlagImgHtml(s.flag)}</span>
+                <span class="stat-player-team-name">${escapeHtml(s.teamName)}</span>
               </span>
             </div>
             <div class="stat-player-badge ${badgeClass}">
@@ -1226,9 +1353,9 @@ async function loadTopScorers() {
       targetEl.innerHTML = html;
     }
 
-    renderStatList(topScorers, scorersList, "goals", s => s.goals || 0);
-    renderStatList(topAssists, assistsList, "assists", s => s.assists || 0);
-    renderStatList(topGoalsAssists, goalsAssistsList, "goals-assists", s => (s.goals || 0) + (s.assists || 0));
+    renderStatList(topScorers, scorersList, "goals", s => s.goals);
+    renderStatList(topAssists, assistsList, "assists", s => s.assists);
+    renderStatList(topGoalsAssists, goalsAssistsList, "goals-assists", s => s.goals + s.assists);
 
   } catch (err) {
     console.warn("[Scorers] Failed to load top stats:", err.message || err);
