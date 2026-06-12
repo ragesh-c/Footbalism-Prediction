@@ -303,6 +303,8 @@ const FixturesAPI = (() => {
             match.score2 = isNaN(scoreHome) ? null : scoreHome;
           }
           match.status = newStatus;
+          match.id = event.id;
+          match.displayClock = comp.status?.displayClock || null;
           
           console.log(`[Fixtures] ESPN Update: ${match.team1} ${match.score1} - ${match.score2} ${match.team2} (${newStatus})`);
         }
