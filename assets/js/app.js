@@ -553,6 +553,7 @@ async function loadFixturesData(opts = {}) {
     Object.values(apiData.byDate).forEach(dayMatches => {
       dayMatches.forEach(m => {
         list.push({
+          id: m.id || null,
           group: m.group || m.stageLabel,
           date: m.istDate,
           istDate: m.istDate,
@@ -565,7 +566,8 @@ async function loadFixturesData(opts = {}) {
           status: m.status,
           score1: m.home.score,
           score2: m.away.score,
-          utcDate: m.utcDate
+          utcDate: m.utcDate,
+          displayClock: m.displayClock || null
         });
       });
     });
