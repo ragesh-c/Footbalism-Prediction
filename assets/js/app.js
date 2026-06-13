@@ -499,7 +499,7 @@ function buildMatchRow(m) {
       ${clockHtml}
       <span class="live-dot"></span>
     `;
-  } else if (isFinished || hasScore) {
+  } else if (isFinished && hasScore) {
     centerHtml = `<span class="fixture-row__score">${m.score1} - ${m.score2}</span>`;
   } else {
     centerHtml = `<span class="fixture-row__time">${m.istTime}</span>`;
