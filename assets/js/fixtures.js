@@ -526,6 +526,8 @@ const FixturesAPI = (() => {
           };
         });
 
+        table.sort((a, b) => a.position - b.position);
+
         return {
           name: g.abbreviation || g.name,
           table: table

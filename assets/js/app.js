@@ -627,8 +627,9 @@ async function loadGroupStandings(opts = {}) {
     card.className = "group-card";
     const displayName = g.name.replace("GROUP_", "Group ");
 
+    const sortedTable = [...g.table].sort((a, b) => a.position - b.position);
     let rowsHtml = "";
-    g.table.forEach(row => {
+    sortedTable.forEach(row => {
       const next = getNextOpponent(row.team.short || row.team.name);
       rowsHtml += `
         <tr class="gt-row">
