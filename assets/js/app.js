@@ -310,6 +310,16 @@ function getShortDayName(istDateStr) {
   return DAYS_SHORT[d.getDay()];
 }
 
+function getTodayISTDateString() {
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000; // UTC+5:30
+  const now = new Date();
+  const istDate = new Date(now.getTime() + IST_OFFSET);
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = MONTHS[istDate.getUTCMonth()];
+  const day = istDate.getUTCDate();
+  return `${month} ${day}`;
+}
+
 // ── Date navigation ──
 function initDateNavigation() {
   const datesSet = new Set();
@@ -319,7 +329,12 @@ function initDateNavigation() {
   uniqueMatchDates = Array.from(datesSet);
   // Keep the user's selection across live refreshes when possible
   if (!selectedDate || !uniqueMatchDates.includes(selectedDate)) {
-    selectedDate = uniqueMatchDates[0] || "";
+    const todayStr = getTodayISTDateString();
+    if (uniqueMatchDates.includes(todayStr)) {
+      selectedDate = todayStr;
+    } else {
+      selectedDate = uniqueMatchDates[0] || "";
+    }
   }
   renderDateNavigation();
 }
@@ -394,7 +409,8 @@ function renderFixtures() {
   if (!listEl) return;
 
   if (!selectedDate && uniqueMatchDates.length > 0) {
-    selectedDate = uniqueMatchDates[0];
+    const todayStr = getTodayISTDateString();
+    selectedDate = uniqueMatchDates.includes(todayStr) ? todayStr : (uniqueMatchDates[0] || "");
   }
 
   let matches = CURRENT_MATCHES.filter(m => m.istDate === selectedDate);
