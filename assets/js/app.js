@@ -977,10 +977,10 @@ function renderStatsTab(data, target) {
 
   // Common stats we want to compare
   const statsToCompare = [
-    { key: "possession", label: "Possession %", isPercent: true },
-    { key: "shots", label: "Total Shots" },
+    { key: "possessionPct", label: "Possession %", isPercent: true },
+    { key: "totalShots", label: "Total Shots" },
     { key: "shotsOnTarget", label: "Shots on Target" },
-    { key: "cornerKicks", label: "Corner Kicks" },
+    { key: "wonCorners", label: "Corner Kicks" },
     { key: "foulsCommitted", label: "Fouls" }
   ];
 
@@ -1005,12 +1005,15 @@ function renderStatsTab(data, target) {
       awayPercent = (awayVal / total) * 100;
     }
 
+    const homeDisplay = homeStatObj?.displayValue ? (stat.isPercent && !homeStatObj.displayValue.includes("%") ? `${homeStatObj.displayValue}%` : homeStatObj.displayValue) : `${homeVal}${stat.isPercent ? "%" : ""}`;
+    const awayDisplay = awayStatObj?.displayValue ? (stat.isPercent && !awayStatObj.displayValue.includes("%") ? `${awayStatObj.displayValue}%` : awayStatObj.displayValue) : `${awayVal}${stat.isPercent ? "%" : ""}`;
+
     html += `
       <div class="match-stat-row">
         <div class="match-stat-labels">
-          <span class="match-stat-value">${homeStatObj?.displayValue || homeVal}</span>
+          <span class="match-stat-value">${homeDisplay}</span>
           <span class="match-stat-name">${stat.label}</span>
-          <span class="match-stat-value">${awayStatObj?.displayValue || awayVal}</span>
+          <span class="match-stat-value">${awayDisplay}</span>
         </div>
         <div class="match-stat-bar-container">
           <div class="match-stat-bar-half match-stat-bar-half--home">
