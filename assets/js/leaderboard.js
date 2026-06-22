@@ -50,11 +50,7 @@ const Leaderboard = (() => {
     if (history.length < 3) return null;
 
     const last3 = history.slice(-3);
-    const median = Math.ceil(totalPlayers / 2);
 
-    if (last3.every(r => r <= median)) {
-      return { emoji: "🔥", label: "On Fire", cls: "badge--fire" };
-    }
     if (last3[0] > last3[1] && last3[1] > last3[2]) {
       return { emoji: "📈", label: "Rising", cls: "badge--rising" };
     }
