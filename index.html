@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Footbalism World Cup 2026 Prediction Contest — Live Leaderboard">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta property="og:title" content="Footbalism · WC 2026 Predictions">
+  <meta property="og:description" content="Live leaderboard, fixtures, and group standings for the Footbalism World Cup 2026 prediction contest.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/img/17mbappe1.webp">
+  <title>Footbalism · WC 2026 Predictions</title>
+
+  <!-- Favicon placeholder -->
+  <link rel="icon" type="image/svg+xml" href="assets/img/icons/favicon.svg">
+
+  <!-- Fonts (preconnect + single family — Inter is the only face in use) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://sheets.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+  <!-- First hero slide — fetch early, it's the LCP image -->
+  <link rel="preload" as="image" href="assets/img/17mbappe1.webp" fetchpriority="high">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/main.css?v=1.1.1">
+  <link rel="stylesheet" href="assets/css/hero.css?v=1.1.1">
+  <link rel="stylesheet" href="assets/css/leaderboard.css?v=1.1.1">
+
+  <!-- Config (injected via deploy workflow / copy from config.example.js) -->
+  <script src="assets/js/config.js?v=1.1.1"></script>
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav class="nav" id="nav">
+    <div class="container">
+      <div class="nav__inner">
+        <a href="#" class="nav__logo">F<span class="logo-emoji">⚽</span><span class="logo-emoji">⚽</span>T<span class="logo-emoji">🅱️</span><span class="logo-emoji">🅰️</span>LIS<span class="logo-emoji">Ⓜ️</span></a>
+        <button class="nav__toggle" id="nav-toggle" aria-expanded="false" aria-label="Toggle navigation" aria-controls="nav-links">
+          <span class="nav__toggle-icon"></span>
+        </button>
+        <ul class="nav__links" id="nav-links">
+          <li><a href="#leaderboard">Standings</a></li>
+          <li><a href="#timeline">Schedule</a></li>
+          <li><a href="#groups">Groups</a></li>
+          <li><a href="#scorers">Player Stats</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" id="hero">
+
+    <!-- Parallax background slideshow (World Cup Historic Moments) -->
+    <!-- Slides are lazy: only the first ships an inline image; the rest
+         load just-in-time via data-bg (see HeroSlideshow in app.js) -->
+    <div class="hero__slideshow-container" data-parallax="0.35">
+      <div class="hero__slide hero__slide--active" style="background-image: url('assets/img/17mbappe1.webp')"></div>
+      <div class="hero__slide" data-bg="assets/img/3500.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/39aaa03103d5c35f2d092f6b044ae806.jpg"></div>
+      <div class="hero__slide" data-bg="assets/img/5141.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/79647699.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/7e11f923757d7137dc32ba9c7a9c2bfd.jpg"></div>
+      <div class="hero__slide" data-bg="assets/img/Andres-Iniesta-celebrates-scoring-for-Spain-in-the-South-Africa-2010-final.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/Argentina-v-France-Final-FIFA-World-Cup-Qatar-2022.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/France-v-Croatia-2018-FIFA-World-Cup-Russia-Final.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/Greatest-World-Cup-moments-1.webp"></div>
+      <div class="hero__slide" data-bg="assets/img/HKCwpttWAAAz6MW.jpeg"></div>
+      <div class="hero__slide" data-bg="assets/img/Italy-s-Roberto-Baggio-hangs-his-head-as-Brazil-s-Taffarel-celebrates.avif"></div>
+      <div class="hero__slide" data-bg="assets/img/b0579a3e947ff1f99a929218a24892ab.jpg"></div>
+      <div class="hero__slide" data-bg="assets/img/cea18c2c2816b3e79b2b7e8d06f969cd.jpg"></div>
+      <div class="hero__slide" data-bg="assets/img/d567b0f414148f7d2c06b808300f62ca.jpg"></div>
+      <div class="hero__slide" data-bg="assets/img/ronaldo.jpg"></div>
+      <div class="hero__slide" data-bg="assets/img/simon-brunty-getty-images-2.webp"></div>
+    </div>
+    <!-- Cursor-reactive painted texture (Three.js shader, see fx-background.js) -->
+    <div class="hero__paint" id="paint-bg" aria-hidden="true"></div>
+    <div class="hero__overlay"></div>
+    <div class="hero__orb hero__orb--red" data-parallax="0.15"></div>
+    <div class="hero__orb hero__orb--gold" data-parallax="0.2"></div>
+    <div class="hero__orb hero__orb--blue" data-parallax="0.1"></div>
+    <div class="hero__stripe"></div>
+    <div class="hero__noise"></div>
+
+    <!-- Structural Grid Lines -->
+    <div class="hero__grid-line hero__grid-line--v1"></div>
+    <div class="hero__grid-line hero__grid-line--v2"></div>
+    <div class="hero__grid-line hero__grid-line--h1"></div>
+
+    <div class="container hero__content-container">
+      <div class="hero__content">
+
+
+
+        <!-- Odometer Vintage Style Countdown -->
+        <div class="vintage-countdown" id="countdown">
+          <div class="odometer-group">
+            <div class="odometer-segment">
+              <div class="odometer-digits" id="odo-days">
+                <span class="odometer-digit">0</span>
+                <span class="odometer-digit">0</span>
+              </div>
+              <span class="odometer-label">DAYS</span>
+            </div>
+            <span class="odometer-colon">:</span>
+            <div class="odometer-segment">
+              <div class="odometer-digits" id="odo-hours">
+                <span class="odometer-digit">0</span>
+                <span class="odometer-digit">0</span>
+              </div>
+              <span class="odometer-label">HOURS</span>
+            </div>
+            <span class="odometer-colon">:</span>
+            <div class="odometer-segment">
+              <div class="odometer-digits" id="odo-minutes">
+                <span class="odometer-digit">0</span>
+                <span class="odometer-digit">0</span>
+              </div>
+              <span class="odometer-label">MINUTES</span>
+            </div>
+            <span class="odometer-colon">:</span>
+            <div class="odometer-segment">
+              <div class="odometer-digits" id="odo-seconds">
+                <span class="odometer-digit">0</span>
+                <span class="odometer-digit">0</span>
+              </div>
+              <span class="odometer-label">SECONDS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__cta">
+          <a href="#leaderboard" class="btn btn--primary">
+            View Standings <span class="btn__arrow">→</span>
+          </a>
+          <a href="#timeline" class="btn btn--ghost">Match Schedule</a>
+        </div>
+
+        <!-- Live stats pulled from data -->
+        <div class="hero__meta">
+          <div class="hero__stat">
+            <span class="hero__stat-value" id="stat-day">–</span>
+            <span class="hero__stat-label">Current Day</span>
+          </div>
+          <div class="hero__stat">
+            <span class="hero__stat-value" id="stat-leader">–</span>
+            <span class="hero__stat-label">Leader</span>
+          </div>
+          <div class="hero__stat">
+            <span class="hero__stat-value" id="stat-score">–</span>
+            <span class="hero__stat-label">Top Score</span>
+          </div>
+          <div class="hero__stat">
+            <span class="hero__stat-value">35</span>
+            <span class="hero__stat-label">Match Days</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="hero__scroll" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 3v10M3 9l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Scroll
+    </div>
+
+  </section>
+
+  <!-- ── Stats bar ── -->
+  <div class="stats-bar" data-reveal>
+    <div class="container">
+      <div class="stats-bar__inner">
+        <div class="stats-bar__item">
+          <span class="stats-bar__value" id="stat-bar-day">–</span>
+          <span class="stats-bar__label">Day Progress</span>
+        </div>
+        <div class="stats-bar__item">
+          <span class="stats-bar__value" id="stat-bar-leader">–</span>
+          <span class="stats-bar__label">Current Leader</span>
+        </div>
+        <div class="stats-bar__item">
+          <span class="stats-bar__value" id="stat-bar-players">–</span>
+          <span class="stats-bar__label">Contestants</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Leaderboard ── -->
+  <section class="leaderboard-section" id="leaderboard">
+    <div class="container">
+
+      <div class="section-header" data-reveal>
+        <div>
+          <p class="section-eyebrow">Live Standings</p>
+          <h2 class="section-title">Leaderboard</h2>
+        </div>
+        <div class="section-meta">
+          <span id="leaderboard-count" class=""></span>
+          <span id="data-source" class="data-source"></span>
+          <span id="lb-updated" class="lb-updated" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <!-- Loading state (skeleton rows) -->
+      <div id="leaderboard-loading" aria-label="Loading standings">
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="lb-table-wrap" data-reveal>
+        <table class="lb-table" id="leaderboard-table" style="opacity:0" aria-label="WC 2026 Prediction Contest Leaderboard">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th class="th-name" scope="col">Player</th>
+              <th scope="col">PTS</th>
+              <th class="lb-cell--change" scope="col">+/-</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <!-- Populated by leaderboard.js -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Match Day Timeline ── -->
+  <section class="timeline-section" id="timeline" data-reveal>
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <p class="section-eyebrow">Contest Schedule</p>
+          <h2 class="section-title">Match Days</h2>
+        </div>
+      </div>
+      <!-- Date timeline removed to match FotMob fixtures view -->
+
+      <!-- Match Fixtures Panel (IST conversion) -->
+      <div class="fixtures-panel" id="fixtures-panel">
+        <div class="fixtures-panel__header">
+          <!-- Top Row: Title Bar -->
+          <div class="fixtures-panel__title-bar">
+            <h3 class="fixtures-panel__title">Fixtures</h3>
+          </div>
+          
+          <!-- Bottom Row: Filter Pills -->
+          <div class="fixtures-panel__filters">
+            <div class="filter-pills-left">
+              <button class="filter-pill filter-pill--active" id="filter-all">All</button>
+              <button class="filter-pill" id="filter-ongoing">Ongoing</button>
+              <button class="filter-pill" id="filter-tv">On TV</button>
+              <button class="filter-pill" id="filter-time">By Group</button>
+            </div>
+            
+            <div class="filter-pills-right">
+              <div class="search-filter-input">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 14A7 7 0 107 0a7 7 0 000 14z" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M12 12l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="fixtures-search" placeholder="Filter team...">
+              </div>
+              <button class="icon-circle-btn" id="filter-sort-btn" title="Toggle Sort Order">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 3v10M4 13l-3-3M4 13l3-3M12 13V3M12 3l-3 3M12 3l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Date Navigation Bar (FotMob Style) -->
+          <div class="fixtures-date-nav" id="fixtures-date-nav">
+            <button class="date-nav-arrow" id="date-nav-prev" title="Previous Day">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <div class="date-nav-track" id="date-nav-track">
+              <!-- Dynamically populated date pills -->
+            </div>
+            <button class="date-nav-arrow" id="date-nav-next" title="Next Day">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="fixtures-list" id="fixtures-list">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Group Standings / Tournament Bracket ── -->
+  <section class="groups-section" id="groups" data-reveal>
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <p class="section-eyebrow">FIFA World Cup 2026</p>
+          <h2 class="section-title" id="groups-section-title">Tournament Bracket</h2>
+        </div>
+        <div class="section-meta" style="display: flex; gap: var(--sp-sm); align-items: center;">
+          <div class="groups-tabs" id="groups-tabs">
+            <button class="groups-tab-btn groups-tab-btn--active" data-tab="bracket">Knockout Tree</button>
+            <button class="groups-tab-btn" data-tab="standings">Group Standings</button>
+          </div>
+          <span id="standings-source" class="data-source"></span>
+        </div>
+      </div>
+      
+      <!-- Groups Grid -->
+      <div class="groups-grid" id="groups-grid" style="display: none;">
+        <!-- Dynamic group tables will be injected here -->
+      </div>
+
+      <!-- Tournament Bracket Container -->
+      <div class="bracket-container" id="bracket-container">
+        <!-- Dynamic bracket will be injected here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Top Stats / Player Stats ── -->
+  <section class="scorers-section" id="scorers" data-reveal>
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <p class="section-eyebrow">FIFA World Cup 2026</p>
+          <h2 class="section-title">Player Stats</h2>
+        </div>
+        <div class="section-meta">
+          <span id="scorers-source" class="data-source data-source--sheets">Source: football-data.org</span>
+        </div>
+      </div>
+      
+      <!-- Stats Cards Grid -->
+      <div class="stats-cards-grid">
+        <!-- Top Scorer Card -->
+        <div class="stat-card">
+          <div class="stat-card__header">
+            <h3 class="stat-card__title">Top Scorer</h3>
+            <span class="stat-card__chevron">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-card__list" id="stat-list-scorers">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <!-- Assists Card -->
+        <div class="stat-card">
+          <div class="stat-card__header">
+            <h3 class="stat-card__title">Assists</h3>
+            <span class="stat-card__chevron">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-card__list" id="stat-list-assists">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <!-- Goals + Assists Card -->
+        <div class="stat-card">
+          <div class="stat-card__header">
+            <h3 class="stat-card__title">Goals + Assists</h3>
+            <span class="stat-card__chevron">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-card__list" id="stat-list-goals-assists">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div class="container">
+      <p>F⚽⚽T🅱️🅰️LISⓂ️ WC 2026 Prediction Contest</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js"></script>
+  <script src="assets/js/matches.js?v=1.1.1"></script>
+  <script src="assets/js/fixtures.js?v=1.1.1"></script>
+  <script src="assets/js/sheets.js?v=1.1.1"></script>
+  <script src="assets/js/leaderboard.js?v=1.1.1"></script>
+  <script src="assets/js/parallax.js?v=1.1.1"></script>
+  <script src="assets/js/bracket.js?v=1.1.1"></script>
+  <script src="assets/js/app.js?v=1.1.1"></script>
+  <!-- Painted hero background (ES module; pulls Three.js from jsDelivr) -->
+  <script type="module" src="assets/js/fx-background.js?v=1.1.1"></script>
+
+  <!-- Vercel Web Analytics & Speed Insights -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Inject config from GitHub Secrets
+        env:
+          SHEETS_API_KEY: "${{ secrets.SHEETS_API_KEY }}"
+          FOOTBALL_API_KEY: "${{ secrets.FOOTBALL_API_KEY }}"
+          SHEET_ID: "${{ secrets.SHEET_ID }}"
+          SHEET_NAME: "${{ secrets.SHEET_NAME }}"
+          ADMIN_PASSKEY: "${{ secrets.ADMIN_PASSKEY }}"
+        run: node generate-config.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          # .gitignore must not be published: it lists assets/js/config.js,
+          # which makes the action's git-add skip the injected config.
+          exclude_assets: '.github,.gitignore,config.example.js,README.md'
+          # Don't delete files already on gh-pages — the live-data workflow
+          # publishes assets/data/live/*.json there between site deploys.
+          keep_files: true

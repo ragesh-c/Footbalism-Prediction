@@ -1,0 +1,376 @@
+/* ─────────────────────────────────────────────
+   main.css — Footbalism WC 2026
+   Design tokens + resets + global styles
+   ───────────────────────────────────────────── */
+
+/* Fonts are loaded via <link> in the document head (preconnect + Inter only)
+   instead of a render-blocking @import here. */
+
+/* ── Tokens ── */
+:root {
+  --c-bg:          #121212;       /* Charcoal black */
+  --c-surface:     #1a1a1a;       /* Card surface */
+  --c-surface-2:   #242424;       /* Elevated surface */
+  --c-border:      #2d2d2d;       /* Subtle borders */
+
+  --c-red:         #e63946;       /* USA red */
+  --c-blue:        #1d3d8f;       /* Mexico blue */
+  --c-accent:      #f4c542;       /* Gold — WC trophy colour */
+  --c-accent-dim:  rgba(244,197,66,0.12);
+  --c-white:       #f0f4ff;
+  --c-muted:       #6b7a99;
+  --c-text:        #c8d4f0;
+
+  /* Badge colours */
+  --c-rising:      #22c55e;
+  --c-contender:   #f4c542;
+  --c-slipping:    #94a3b8;
+
+  /* FotMob-style table system — shared by EVERY table on the site
+     (.lb-table and .group-table must stay visually identical) */
+  --c-card:        #1d1d1d;       /* Flat card surface */
+  --c-card-hover:  #27272b;       /* Row hover */
+  --c-tbl-muted:   #9f9f9f;       /* Column headers, secondary text */
+  --c-qual:        #2ad572;       /* Qualification green */
+  --c-qual-amber:  #e7b416;       /* Possible qualification (best 3rd) */
+  --tbl-row-h:     40px;          /* Row height */
+  --tbl-fs:        0.875rem;      /* Cell text: 14px */
+  --tbl-head-fs:   13px;          /* Header text */
+  --tbl-pad-x:     var(--sp-sm);  /* Inner cell padding: 8px */
+  --tbl-edge:      var(--sp-md);  /* Leading/trailing column edge: 16px */
+
+  /* Type */
+  --f-display:     'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-body:        'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-mono:        'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-serif:       'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Scale */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  2rem;
+  --text-4xl:  3rem;
+  --text-5xl:  4.5rem;
+  --text-hero: clamp(4rem, 12vw, 10rem);
+
+  /* Spacing */
+  --sp-xs:   0.25rem;
+  --sp-sm:   0.5rem;
+  --sp-md:   1rem;
+  --sp-lg:   1.5rem;
+  --sp-xl:   2rem;
+  --sp-2xl:  3rem;
+  --sp-3xl:  5rem;
+
+  /* Radii */
+  --r-sm:  4px;
+  --r-md:  8px;
+  --r-lg:  12px;
+  --r-xl:  20px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 40px rgba(244,197,66,0.15);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  /* Native smooth scrolling is off — Lenis drives it (app.js); the
+     anchor handler in parallax.js covers in-page links either way. */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Lenis recommended setup */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* Anchored sections land below the fixed nav, not underneath it */
+section[id], div[id="leaderboard"] {
+  scroll-margin-top: 88px;
+}
+
+/* Visible keyboard focus everywhere interactive */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+body {
+  font-family: var(--f-body);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Utility ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--sp-lg);
+}
+
+/* ── Scroll reveal ── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Nav ── */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 1.75rem 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid transparent;
+}
+.nav.nav--scrolled {
+  padding: 1rem 0;
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav__logo {
+  font-family: var(--f-display);
+  font-size: 1.85rem;
+  letter-spacing: 0.04em;
+  color: var(--c-white);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+.logo-emoji {
+  font-size: 0.72em;
+  line-height: 1;
+  display: inline-block;
+  transform: translateY(-4px);
+  margin: 0 1px;
+}
+.nav__links {
+  display: flex;
+  gap: var(--sp-xl);
+  list-style: none;
+}
+.nav__links a {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-white);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.25s ease;
+  opacity: 0.8;
+}
+.nav__links a:hover {
+  color: var(--c-accent);
+  opacity: 1;
+  text-shadow: 0 0 15px rgba(244, 197, 66, 0.4);
+}
+
+/* ── Hamburger Toggle ── */
+.nav__toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 110;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav__toggle:hover, .nav__toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--c-accent);
+  outline: none;
+}
+.nav__toggle-icon {
+  position: relative;
+  width: 18px;
+  height: 2px;
+  background: var(--c-white);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav__toggle-icon::before,
+.nav__toggle-icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  background: var(--c-white);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav__toggle-icon::before {
+  top: -6px;
+}
+.nav__toggle-icon::after {
+  top: 6px;
+}
+
+/* Open/active state morphing icon */
+.nav--open .nav__toggle-icon {
+  background: transparent;
+}
+.nav--open .nav__toggle-icon::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+.nav--open .nav__toggle-icon::after {
+  transform: rotate(-45deg);
+  top: 0;
+}
+
+/* ── Footer ── */
+.footer {
+  padding: var(--sp-2xl) 0;
+  border-top: 1px solid var(--c-border);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--c-muted);
+}
+.footer a { color: var(--c-accent); }
+.footer a:hover { text-decoration: underline; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--c-bg); }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-muted); }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* ── Mobile Layout & Hamburger Menu Optimizations ── */
+@media (max-width: 768px) {
+  .nav__toggle {
+    display: flex;
+  }
+  .nav__links {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(300px, 80vw);
+    height: 100vh;
+    background: rgba(18, 18, 18, 0.96);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-xl);
+    padding: var(--sp-2xl);
+    z-index: 105;
+    
+    transform: translateX(100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.3s ease,
+                visibility 0.3s ease;
+  }
+  .nav--open .nav__links {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+  }
+  .nav__links a {
+    font-size: 1.1rem !important;
+    letter-spacing: 0.18em !important;
+    padding: 12px 24px;
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .nav__logo {
+    font-size: 1.5rem;
+  }
+  .nav {
+    padding: 1.25rem 0;
+  }
+  .nav.nav--scrolled {
+    padding: 0.85rem 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 0 var(--sp-md); /* Reduce padding to 16px to save screen space */
+  }
+  .nav__logo {
+    font-size: 1.35rem;
+  }
+}
+
+/* ── Custom Scrollbar (Premium Dark Theme) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--c-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: var(--r-sm);
+  border: 2px solid var(--c-bg);
+  transition: background 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-muted);
+}
