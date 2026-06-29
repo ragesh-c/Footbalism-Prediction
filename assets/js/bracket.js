@@ -205,57 +205,35 @@ const BracketAPI = (() => {
 
     // ── LEFT SIDE CONNECTIONS ──
     // Column 0 (R32 L) -> Column 1 (R16 L)
-    connect(0, 0, 1, 0, true); // FRA/SWE -> R16-3
-    connect(0, 1, 1, 0, true); // NED/MAR -> R16-3
-    connect(0, 2, 1, 1, true); // RSA/CAN -> R16-1
-    connect(0, 3, 1, 1, true); // GER/PAR -> R16-1
-    
-    connect(0, 4, 1, 2, true); // POR/CRO -> R16-5
-    connect(0, 5, 1, 2, true); // ESP/AUT -> R16-5
-    connect(0, 6, 1, 3, true); // USA/BIH -> R16-6
-    connect(0, 7, 1, 3, true); // BEL/SEN -> R16-6
-
-    // Column 1 (R16 L) -> QF
-    connect(1, 1, 2, 0, true);  // Left R16 Row 1 (R16-1) -> Left QF Row 0 (QF-1)
-    connect(1, 2, 2, 1, true);  // Left R16 Row 2 (R16-5) -> Left QF Row 1 (QF-2)
-    connect(1, 3, 2, 1, true);  // Left R16 Row 3 (R16-6) -> Left QF Row 1 (QF-2)
-    
-    // QF Left -> SF Left
-    connect(2, 0, 3, 0, true);  // Left QF Row 0 (QF-1) -> Left SF (SF-1)
-    connect(2, 1, 3, 0, true);  // Left QF Row 1 (QF-2) -> Left SF (SF-1)
-
-    // SF Left -> Center (Final)
+    for (let r = 0; r < 8; r++) {
+      connect(0, r, 1, Math.floor(r / 2), true);
+    }
+    // Column 1 (R16 L) -> Column 2 (QF L)
+    for (let r = 0; r < 4; r++) {
+      connect(1, r, 2, Math.floor(r / 2), true);
+    }
+    // Column 2 (QF L) -> Column 3 (SF L)
+    for (let r = 0; r < 2; r++) {
+      connect(2, r, 3, 0, true);
+    }
+    // Column 3 (SF L) -> Column 4 (Center - Final)
     connect(3, 0, 4, 0, true);
 
     // ── RIGHT SIDE CONNECTIONS ──
     // Column 8 (R32 R) -> Column 7 (R16 R)
-    connect(8, 0, 7, 0, false); // BRA/JPN -> R16-2
-    connect(8, 1, 7, 0, false); // CIV/NOR -> R16-2
-    connect(8, 2, 7, 1, false); // MEX/ECU -> R16-4
-    connect(8, 3, 7, 1, false); // ENG/COD -> R16-4
-    
-    connect(8, 4, 7, 2, false); // ARG/CPV -> R16-8
-    connect(8, 5, 7, 2, false); // SUI/ALG -> R16-8
-    connect(8, 6, 7, 3, false); // COL/GHA -> R16-7
-    connect(8, 7, 7, 3, false); // AUS/EGY -> R16-7
-
-    // Column 7 (R16 R) -> QF
-    connect(7, 1, 6, 0, false); // Right R16 Row 1 (R16-4) -> Right QF Row 0 (QF-3)
-    connect(7, 2, 6, 1, false); // Right R16 Row 2 (R16-8) -> Right QF Row 1 (QF-4)
-    connect(7, 3, 6, 1, false); // Right R16 Row 3 (R16-7) -> Right QF Row 1 (QF-4)
-
-    // QF Right -> SF Right
-    connect(6, 0, 5, 0, false); // Right QF Row 0 (QF-3) -> Right SF (SF-2)
-    connect(6, 1, 5, 0, false); // Right QF Row 1 (QF-4) -> Right SF (SF-2)
-
-    // SF Right -> Center (Final)
+    for (let r = 0; r < 8; r++) {
+      connect(8, r, 7, Math.floor(r / 2), false);
+    }
+    // Column 7 (R16 R) -> Column 6 (QF R)
+    for (let r = 0; r < 4; r++) {
+      connect(7, r, 6, Math.floor(r / 2), false);
+    }
+    // Column 6 (QF R) -> Column 5 (SF R)
+    for (let r = 0; r < 2; r++) {
+      connect(6, r, 5, 0, false);
+    }
+    // Column 5 (SF R) -> Column 4 (Center - Final)
     connect(5, 0, 4, 0, false);
-
-    // ── CROSSING CONNECTIONS ──
-    // Right R16 Row 0 (R16-2) -> Left QF Row 0 (QF-1)
-    connect(7, 0, 2, 0, false); // From Right R16-2 to Left QF-1
-    // Left R16 Row 0 (R16-3) -> Right QF Row 0 (QF-3)
-    connect(1, 0, 6, 0, true);  // From Left R16-3 to Right QF-3
 
     svg.innerHTML = paths.join("");
   }
@@ -305,108 +283,296 @@ const BracketAPI = (() => {
 
     const matches = (typeof CURRENT_MATCHES !== "undefined") ? CURRENT_MATCHES : [];
 
-    // Filter by stage
-    const filterRound = (names) => {
-      return matches.filter(m => {
-        const grp = (m.group || "").toLowerCase().trim();
-        return names.some(n => grp === n.toLowerCase());
+    // Helper to normalize country names for robust matching
+    const normalizeName = (name) => {
+      if (!name) return "";
+      name = name.toLowerCase().trim();
+      if (name === "côte d'ivoire" || name === "cote d'ivoire" || name === "ivory coast" || name === "civ") return "ivory coast";
+      if (name === "cabo verde" || name === "cape verde" || name === "cpv") return "cape verde";
+      if (name === "congo dr" || name === "dr congo" || name === "cod") return "congo dr";
+      if (name === "bosnia and herzegovina" || name === "bosnia-herzegovina" || name === "bih") return "bosnia-herzegovina";
+      if (name === "usa" || name === "united states" || name === "united states of america") return "united states";
+      if (name === "south korea" || name === "korea republic" || name === "kor") return "south korea";
+      return name;
+    };
+
+    // Helper to find a match in CURRENT_MATCHES by its two team names
+    const findMatch = (t1, t2) => {
+      const nt1 = normalizeName(t1);
+      const nt2 = normalizeName(t2);
+      if (!nt1 || !nt2) return null;
+      return matches.find(m => {
+        const mt1 = normalizeName(m.team1 || m.home?.name || m.home?.short || "");
+        const mt2 = normalizeName(m.team2 || m.away?.name || m.away?.short || "");
+        return (mt1 === nt1 && mt2 === nt2) || (mt1 === nt2 && mt2 === nt1);
       });
     };
 
-    const r32 = filterRound(["round of 32"]);
-    const r16 = filterRound(["round of 16"]);
-    const qf = filterRound(["quarter-finals", "quarterfinals"]);
-    const sf = filterRound(["semi-finals", "semifinals"]);
-    const finalMatches = filterRound(["final"]);
-    const thirdPlaceMatches = filterRound(["third place", "3rd-place-match", "third place playoff"]);
-
-    // Sort chronologically using a robust date parser that works for both live and static fallback data
-    const getComparableDate = (m) => {
-      if (m.utcDate && !m.utcDate.endsWith("T00:00:00Z")) {
-        return new Date(m.utcDate).getTime();
-      }
-      if (m.istDate) {
-        const parts = m.istDate.split(" ");
-        const month = parts[0] === "Jun" ? 5 : 6;
-        const day = parseInt(parts[1]) || 1;
+    // Helper to determine the winner of a match
+    const getWinnerName = (m) => {
+      if (!m) return null;
+      if (m.home?.winner === true) return m.team1;
+      if (m.away?.winner === true) return m.team2;
+      
+      if (m.status === "FINISHED" && m.score1 !== null && m.score2 !== null) {
+        const s1 = parseInt(m.score1);
+        const s2 = parseInt(m.score2);
+        if (s1 > s2) return m.team1;
+        if (s2 > s1) return m.team2;
         
-        let hours = 0;
-        let minutes = 0;
-        if (m.istTime) {
-          const timeParts = m.istTime.split(" ");
-          const hm = timeParts[0].split(":");
-          hours = parseInt(hm[0]) || 0;
-          minutes = parseInt(hm[1]) || 0;
-          if (timeParts[1] === "PM" && hours < 12) hours += 12;
-          if (timeParts[1] === "AM" && hours === 12) hours = 0;
-        }
-        
-        return new Date(2026, month, day, hours, minutes).getTime();
-      }
-      return 0;
-    };
-
-    const sortByDate = (arr) => {
-      return arr.sort((a, b) => getComparableDate(a) - getComparableDate(b));
-    };
-
-    sortByDate(r32);
-    sortByDate(r16);
-    sortByDate(qf);
-    sortByDate(sf);
-    sortByDate(finalMatches);
-    sortByDate(thirdPlaceMatches);
-
-    // ── MAPPING MATCHES TO SLOTS ──
-    // Left Columns
-    const r32_L = [r32[5], r32[3], r32[0], r32[2], r32[11], r32[10], r32[9], r32[8]];
-    const r16_L = [r16[2], r16[0], r16[4], r16[5]];
-    const qf_L = [qf[0], qf[1]];
-    const sf_L = [sf[0]];
-
-    // Right Columns
-    const r32_R = [r32[1], r32[4], r32[6], r32[7], r32[14], r32[12], r32[15], r32[13]];
-    const r16_R = [r16[1], r16[3], r16[7], r16[6]];
-    const qf_R = [qf[2], qf[3]];
-    const sf_R = [sf[1]];
-
-    // Center Column
-    const finalMatch = finalMatches[0];
-    const bronzeMatch = thirdPlaceMatches[0];
-
-    // Determine Champion if final is finished
-    let champName = "TBD";
-    let champFlag = null;
-    let isChampTbd = true;
-
-    if (finalMatch && finalMatch.status === "FINISHED") {
-      const s1 = parseInt(finalMatch.score1);
-      const s2 = parseInt(finalMatch.score2);
-      if (!isNaN(s1) && !isNaN(s2)) {
-        isChampTbd = false;
-        if (s1 > s2) {
-          champName = finalMatch.team1;
-          champFlag = finalMatch.flag1;
-        } else {
-          champName = finalMatch.team2;
-          champFlag = finalMatch.flag2;
+        if (m.home?.shootoutScore !== null && m.away?.shootoutScore !== null) {
+          const ss1 = parseInt(m.home.shootoutScore);
+          const ss2 = parseInt(m.away.shootoutScore);
+          if (ss1 > ss2) return m.team1;
+          if (ss2 > ss1) return m.team2;
         }
       }
+      return null;
+    };
+
+    // Define the 16 Round of 32 matches in order
+    const r32MatchesDef = [
+      // Left side (1-8)
+      { id: 1, team1: "Brazil", team2: "Japan" },
+      { id: 2, team1: "Ivory Coast", team2: "Norway" },
+      { id: 3, team1: "Mexico", team2: "Ecuador" },
+      { id: 4, team1: "England", team2: "Congo DR" },
+      { id: 5, team1: "Germany", team2: "Paraguay" },
+      { id: 6, team1: "France", team2: "Sweden" },
+      { id: 7, team1: "South Africa", team2: "Canada" },
+      { id: 8, team1: "Netherlands", team2: "Morocco" },
+      // Right side (9-16)
+      { id: 9, team1: "Portugal", team2: "Croatia" },
+      { id: 10, team1: "Spain", team2: "Austria" },
+      { id: 11, team1: "United States", team2: "Bosnia-Herzegovina" },
+      { id: 12, team1: "Belgium", team2: "Senegal" },
+      { id: 13, team1: "Switzerland", team2: "Algeria" },
+      { id: 14, team1: "Colombia", team2: "Ghana" },
+      { id: 15, team1: "Australia", team2: "Egypt" },
+      { id: 16, team1: "Argentina", team2: "Cape Verde" }
+    ];
+
+    // Build Round of 32 Match Objects
+    const r32Matches = r32MatchesDef.map(def => {
+      const m = findMatch(def.team1, def.team2);
+      const winner = getWinnerName(m);
+      return {
+        ...def,
+        matchObj: m,
+        winner: winner,
+        flag1: m ? m.flag1 : "🏳️",
+        flag2: m ? m.flag2 : "🏳️",
+        team1Display: m ? m.team1 : def.team1,
+        team2Display: m ? m.team2 : def.team2,
+        score1: m ? m.score1 : null,
+        score2: m ? m.score2 : null,
+        status: m ? m.status : "TIMED",
+        istDate: m ? m.istDate : "",
+        istTime: m ? m.istTime : ""
+      };
+    });
+
+    // Build Round of 16 (8 matches)
+    const r16Pairings = [
+      { key: "A", p1: r32Matches[0], p2: r32Matches[1] },
+      { key: "B", p1: r32Matches[2], p2: r32Matches[3] },
+      { key: "C", p1: r32Matches[4], p2: r32Matches[5] },
+      { key: "D", p1: r32Matches[6], p2: r32Matches[7] },
+      { key: "E", p1: r32Matches[8], p2: r32Matches[9] },
+      { key: "F", p1: r32Matches[10], p2: r32Matches[11] },
+      { key: "G", p1: r32Matches[12], p2: r32Matches[13] },
+      { key: "H", p1: r32Matches[14], p2: r32Matches[15] }
+    ];
+
+    const r16Matches = r16Pairings.map(pair => {
+      const t1 = pair.p1.winner || null;
+      const t2 = pair.p2.winner || null;
+      const t1Placeholder = `Winner Match ${pair.p1.id}`;
+      const t2Placeholder = `Winner Match ${pair.p2.id}`;
+      
+      let m = null;
+      if (t1 && t2) {
+        m = findMatch(t1, t2);
+      }
+      
+      const winner = getWinnerName(m);
+      return {
+        key: pair.key,
+        team1: t1,
+        team2: t2,
+        team1Display: t1 || t1Placeholder,
+        team2Display: t2 || t2Placeholder,
+        flag1: t1 ? (pair.p1.winner === pair.p1.team1Display ? pair.p1.flag1 : pair.p1.flag2) : "🏳️",
+        flag2: t2 ? (pair.p2.winner === pair.p2.team1Display ? pair.p2.flag1 : pair.p2.flag2) : "🏳️",
+        score1: m ? m.score1 : null,
+        score2: m ? m.score2 : null,
+        status: m ? m.status : "TIMED",
+        istDate: m ? m.istDate : "",
+        istTime: m ? m.istTime : "",
+        winner: winner,
+        matchObj: m
+      };
+    });
+
+    // Build Quarterfinals (4 matches)
+    const qfPairings = [
+      { id: 1, p1: r16Matches[0], p2: r16Matches[1] },
+      { id: 2, p1: r16Matches[2], p2: r16Matches[3] },
+      { id: 3, p1: r16Matches[4], p2: r16Matches[5] },
+      { id: 4, p1: r16Matches[6], p2: r16Matches[7] }
+    ];
+
+    const qfMatches = qfPairings.map(pair => {
+      const t1 = pair.p1.winner || null;
+      const t2 = pair.p2.winner || null;
+      const t1Placeholder = `Winner Match ${pair.p1.key}`;
+      const t2Placeholder = `Winner Match ${pair.p2.key}`;
+      
+      let m = null;
+      if (t1 && t2) {
+        m = findMatch(t1, t2);
+      }
+      
+      const winner = getWinnerName(m);
+      return {
+        id: pair.id,
+        team1: t1,
+        team2: t2,
+        team1Display: t1 || t1Placeholder,
+        team2Display: t2 || t2Placeholder,
+        flag1: t1 ? (pair.p1.winner === pair.p1.team1Display ? pair.p1.flag1 : pair.p1.flag2) : "🏳️",
+        flag2: t2 ? (pair.p2.winner === pair.p2.team1Display ? pair.p2.flag1 : pair.p2.flag2) : "🏳️",
+        score1: m ? m.score1 : null,
+        score2: m ? m.score2 : null,
+        status: m ? m.status : "TIMED",
+        istDate: m ? m.istDate : "",
+        istTime: m ? m.istTime : "",
+        winner: winner,
+        matchObj: m
+      };
+    });
+
+    // Build Semifinals (2 matches)
+    const sfPairings = [
+      { id: 1, p1: qfMatches[0], p2: qfMatches[1] },
+      { id: 2, p1: qfMatches[2], p2: qfMatches[3] }
+    ];
+
+    const sfMatches = sfPairings.map(pair => {
+      const t1 = pair.p1.winner || null;
+      const t2 = pair.p2.winner || null;
+      const t1Placeholder = `Winner QF ${pair.p1.id}`;
+      const t2Placeholder = `Winner QF ${pair.p2.id}`;
+      
+      let m = null;
+      if (t1 && t2) {
+        m = findMatch(t1, t2);
+      }
+      
+      const winner = getWinnerName(m);
+      return {
+        id: pair.id,
+        team1: t1,
+        team2: t2,
+        team1Display: t1 || t1Placeholder,
+        team2Display: t2 || t2Placeholder,
+        flag1: t1 ? (pair.p1.winner === pair.p1.team1Display ? pair.p1.flag1 : pair.p1.flag2) : "🏳️",
+        flag2: t2 ? (pair.p2.winner === pair.p2.team1Display ? pair.p2.flag1 : pair.p2.flag2) : "🏳️",
+        score1: m ? m.score1 : null,
+        score2: m ? m.score2 : null,
+        status: m ? m.status : "TIMED",
+        istDate: m ? m.istDate : "",
+        istTime: m ? m.istTime : "",
+        winner: winner,
+        matchObj: m
+      };
+    });
+
+    // Build Finals (Final + Bronze)
+    const finalT1 = sfMatches[0].winner || null;
+    const finalT2 = sfMatches[1].winner || null;
+    let finalMatchObj = null;
+    if (finalT1 && finalT2) {
+      finalMatchObj = findMatch(finalT1, finalT2);
     }
+    const finalMatch = {
+      team1: finalT1,
+      team2: finalT2,
+      team1Display: finalT1 || "Winner SF 1",
+      team2Display: finalT2 || "Winner SF 2",
+      flag1: finalT1 ? (sfMatches[0].winner === sfMatches[0].team1Display ? sfMatches[0].flag1 : sfMatches[0].flag2) : "🏳️",
+      flag2: finalT2 ? (sfMatches[1].winner === sfMatches[1].team1Display ? sfMatches[1].flag1 : sfMatches[1].flag2) : "🏳️",
+      score1: finalMatchObj ? finalMatchObj.score1 : null,
+      score2: finalMatchObj ? finalMatchObj.score2 : null,
+      status: finalMatchObj ? finalMatchObj.status : "TIMED",
+      istDate: finalMatchObj ? finalMatchObj.istDate : "",
+      istTime: finalMatchObj ? finalMatchObj.istTime : "",
+      winner: getWinnerName(finalMatchObj),
+      matchObj: finalMatchObj
+    };
+
+    const getSFLoser = (sf) => {
+      if (!sf.team1 || !sf.team2 || !sf.winner) return null;
+      return sf.winner === sf.team1Display ? sf.team2 : sf.team1;
+    };
+    const bronzeT1 = getSFLoser(sfMatches[0]);
+    const bronzeT2 = getSFLoser(sfMatches[1]);
+    let bronzeMatchObj = null;
+    if (bronzeT1 && bronzeT2) {
+      bronzeMatchObj = matches.find(m => {
+        const grp = (m.group || "").toLowerCase().trim();
+        return grp.includes("third") || grp.includes("3rd");
+      });
+    }
+    const bronzeMatch = {
+      team1: bronzeT1,
+      team2: bronzeT2,
+      team1Display: bronzeT1 || "Loser SF 1",
+      team2Display: bronzeT2 || "Loser SF 2",
+      flag1: bronzeT1 ? (sfMatches[0].winner === sfMatches[0].team1Display ? sfMatches[0].flag2 : sfMatches[0].flag1) : "🏳️",
+      flag2: bronzeT2 ? (sfMatches[1].winner === sfMatches[1].team1Display ? sfMatches[1].flag2 : sfMatches[1].flag1) : "🏳️",
+      score1: bronzeMatchObj ? bronzeMatchObj.score1 : null,
+      score2: bronzeMatchObj ? bronzeMatchObj.score2 : null,
+      status: bronzeMatchObj ? bronzeMatchObj.status : "TIMED",
+      istDate: bronzeMatchObj ? bronzeMatchObj.istDate : "",
+      istTime: bronzeMatchObj ? bronzeMatchObj.istTime : "",
+      winner: getWinnerName(bronzeMatchObj),
+      matchObj: bronzeMatchObj
+    };
+
+    // Determine Champion
+    const isChampTbd = !finalMatch.winner;
+    const champName = finalMatch.winner || "TBD";
+    const champFlag = finalMatch.winner 
+      ? (finalMatch.winner === finalMatch.team1Display ? finalMatch.flag1 : finalMatch.flag2) 
+      : null;
+
+    // Slice columns according to Left/Right halves
+    const r32_L = r32Matches.slice(0, 8);
+    const r16_L = r16Matches.slice(0, 4);
+    const qf_L = qfMatches.slice(0, 2);
+    const sf_L = sfMatches.slice(0, 1);
+
+    const r32_R = r32Matches.slice(8, 16);
+    const r16_R = r16Matches.slice(4, 8);
+    const qf_R = qfMatches.slice(2, 4);
+    const sf_R = sfMatches.slice(1, 2);
 
     // Build Column HTML
-    const buildColHtml = (arr, colClass, placeholderPrefix) => {
-      let cardsHtml = "";
-      arr.forEach((m, idx) => {
-        cardsHtml += renderMatchCard(m, `${placeholderPrefix} ${idx + 1}`);
-      });
-      return `<div class="bracket-column ${colClass}">${cardsHtml}</div>`;
+    const buildColHtml = (arr, colClass, label) => {
+      const cardsHtml = arr.map(m => renderMatchCard(m)).join("");
+      return `
+        <div class="bracket-column ${colClass}">
+          <div class="bracket-column-header">${label}</div>
+          ${cardsHtml}
+        </div>
+      `;
     };
 
-    const col1 = buildColHtml(r32_L, "bracket-column--r32", "R32 L");
-    const col2 = buildColHtml(r16_L, "bracket-column--r16", "R16 L");
-    const col3 = buildColHtml(qf_L, "bracket-column--qf", "QF L");
-    const col4 = buildColHtml(sf_L, "bracket-column--sf", "SF L");
+    const col1 = buildColHtml(r32_L, "bracket-column--r32", "ROUND OF 32");
+    const col2 = buildColHtml(r16_L, "bracket-column--r16", "ROUND OF 16");
+    const col3 = buildColHtml(qf_L, "bracket-column--qf", "QUARTERFINALS");
+    const col4 = buildColHtml(sf_L, "bracket-column--sf", "SEMIFINALS");
 
     // Center Column (Trophy + Final + Bronze)
     const trophySvg = isChampTbd 
@@ -423,40 +589,14 @@ const BracketAPI = (() => {
 
     const finalHtml = `
       <div class="bracket-match bracket-match--final">
-        ${finalMatch ? renderMatchCard(finalMatch, "FINAL") : `
-          <div class="bracket-match__teams">
-            <div class="bracket-match__team">
-              <div class="bracket-team-flag--tbd"></div>
-              <span class="bracket-team-name bracket-team-name--tbd">WS1</span>
-            </div>
-            <span class="bracket-match__vs">vs</span>
-            <div class="bracket-match__team">
-              <div class="bracket-team-flag--tbd"></div>
-              <span class="bracket-team-name bracket-team-name--tbd">WS2</span>
-            </div>
-          </div>
-          <div class="bracket-match__info">FINAL</div>
-        `}
+        ${renderMatchCard(finalMatch, "FINAL")}
         <span class="bracket-badge bracket-badge--final">FINAL</span>
       </div>
     `;
 
     const bronzeHtml = `
       <div class="bracket-match bracket-match--bronze">
-        ${bronzeMatch ? renderMatchCard(bronzeMatch, "BRONZE FINAL") : `
-          <div class="bracket-match__teams">
-            <div class="bracket-match__team">
-              <div class="bracket-team-flag--tbd"></div>
-              <span class="bracket-team-name bracket-team-name--tbd">LS1</span>
-            </div>
-            <span class="bracket-match__vs">vs</span>
-            <div class="bracket-match__team">
-              <div class="bracket-team-flag--tbd"></div>
-              <span class="bracket-team-name bracket-team-name--tbd">LS2</span>
-            </div>
-          </div>
-          <div class="bracket-match__info">BRONZE FINAL</div>
-        `}
+        ${renderMatchCard(bronzeMatch, "BRONZE FINAL")}
         <span class="bracket-badge bracket-badge--bronze">BRONZE FINAL</span>
       </div>
     `;
@@ -469,10 +609,10 @@ const BracketAPI = (() => {
       </div>
     `;
 
-    const col6 = buildColHtml(sf_R, "bracket-column--sf", "SF R");
-    const col7 = buildColHtml(qf_R, "bracket-column--qf", "QF R");
-    const col8 = buildColHtml(r16_R, "bracket-column--r16", "R16 R");
-    const col9 = buildColHtml(r32_R, "bracket-column--r32", "R32 R");
+    const col6 = buildColHtml(sf_R, "bracket-column--sf", "SEMIFINALS");
+    const col7 = buildColHtml(qf_R, "bracket-column--qf", "QUARTERFINALS");
+    const col8 = buildColHtml(r16_R, "bracket-column--r16", "ROUND OF 16");
+    const col9 = buildColHtml(r32_R, "bracket-column--r32", "ROUND OF 32");
 
     container.innerHTML = `
       <div class="bracket-wrapper">

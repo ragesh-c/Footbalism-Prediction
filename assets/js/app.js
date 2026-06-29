@@ -624,7 +624,9 @@ async function loadFixturesData(opts = {}) {
           score1: m.home.score,
           score2: m.away.score,
           utcDate: m.utcDate,
-          displayClock: m.displayClock || null
+          displayClock: m.displayClock || null,
+          home: m.home,
+          away: m.away
         });
       });
     });

@@ -407,7 +407,9 @@ const FixturesAPI = (() => {
             tla: home.team?.abbreviation || "",
             crest: home.team?.logo || "",
             flag: getFlag(home.team?.abbreviation) || "🏳️",
-            score: isNaN(scoreHome) ? null : scoreHome
+            score: isNaN(scoreHome) ? null : scoreHome,
+            winner: home.winner || false,
+            shootoutScore: home.shootoutScore || null
           },
           away: {
             name: awayName,
@@ -415,7 +417,9 @@ const FixturesAPI = (() => {
             tla: away.team?.abbreviation || "",
             crest: away.team?.logo || "",
             flag: getFlag(away.team?.abbreviation) || "🏳️",
-            score: isNaN(scoreAway) ? null : scoreAway
+            score: isNaN(scoreAway) ? null : scoreAway,
+            winner: away.winner || false,
+            shootoutScore: away.shootoutScore || null
           }
         });
       });
@@ -458,7 +462,9 @@ const FixturesAPI = (() => {
               tla: "",
               crest: "",
               flag: m.flag1,
-              score: m.score1
+              score: m.score1,
+              winner: m.status === "FINISHED" && m.score1 !== null && m.score2 !== null ? (parseInt(m.score1) > parseInt(m.score2)) : false,
+              shootoutScore: null
             },
             away: {
               name: m.team2,
@@ -466,7 +472,9 @@ const FixturesAPI = (() => {
               tla: "",
               crest: "",
               flag: m.flag2,
-              score: m.score2
+              score: m.score2,
+              winner: m.status === "FINISHED" && m.score1 !== null && m.score2 !== null ? (parseInt(m.score2) > parseInt(m.score1)) : false,
+              shootoutScore: null
             }
           });
         });
