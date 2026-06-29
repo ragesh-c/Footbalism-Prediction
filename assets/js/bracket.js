@@ -205,35 +205,57 @@ const BracketAPI = (() => {
 
     // ── LEFT SIDE CONNECTIONS ──
     // Column 0 (R32 L) -> Column 1 (R16 L)
-    for (let r = 0; r < 8; r++) {
-      connect(0, r, 1, Math.floor(r / 2), true);
-    }
-    // Column 1 (R16 L) -> Column 2 (QF L)
-    for (let r = 0; r < 4; r++) {
-      connect(1, r, 2, Math.floor(r / 2), true);
-    }
-    // Column 2 (QF L) -> Column 3 (SF L)
-    for (let r = 0; r < 2; r++) {
-      connect(2, r, 3, 0, true);
-    }
-    // Column 3 (SF L) -> Column 4 (Center - Final)
+    connect(0, 0, 1, 0, true); // FRA/SWE -> R16-3
+    connect(0, 1, 1, 0, true); // NED/MAR -> R16-3
+    connect(0, 2, 1, 1, true); // RSA/CAN -> R16-1
+    connect(0, 3, 1, 1, true); // GER/PAR -> R16-1
+    
+    connect(0, 4, 1, 2, true); // POR/CRO -> R16-5
+    connect(0, 5, 1, 2, true); // ESP/AUT -> R16-5
+    connect(0, 6, 1, 3, true); // USA/BIH -> R16-6
+    connect(0, 7, 1, 3, true); // BEL/SEN -> R16-6
+
+    // Column 1 (R16 L) -> QF
+    connect(1, 1, 2, 0, true);  // Left R16 Row 1 (R16-1) -> Left QF Row 0 (QF-1)
+    connect(1, 2, 2, 1, true);  // Left R16 Row 2 (R16-5) -> Left QF Row 1 (QF-2)
+    connect(1, 3, 2, 1, true);  // Left R16 Row 3 (R16-6) -> Left QF Row 1 (QF-2)
+    
+    // QF Left -> SF Left
+    connect(2, 0, 3, 0, true);  // Left QF Row 0 (QF-1) -> Left SF (SF-1)
+    connect(2, 1, 3, 0, true);  // Left QF Row 1 (QF-2) -> Left SF (SF-1)
+
+    // SF Left -> Center (Final)
     connect(3, 0, 4, 0, true);
 
     // ── RIGHT SIDE CONNECTIONS ──
     // Column 8 (R32 R) -> Column 7 (R16 R)
-    for (let r = 0; r < 8; r++) {
-      connect(8, r, 7, Math.floor(r / 2), false);
-    }
-    // Column 7 (R16 R) -> Column 6 (QF R)
-    for (let r = 0; r < 4; r++) {
-      connect(7, r, 6, Math.floor(r / 2), false);
-    }
-    // Column 6 (QF R) -> Column 5 (SF R)
-    for (let r = 0; r < 2; r++) {
-      connect(6, r, 5, 0, false);
-    }
-    // Column 5 (SF R) -> Column 4 (Center - Final)
+    connect(8, 0, 7, 0, false); // BRA/JPN -> R16-2
+    connect(8, 1, 7, 0, false); // CIV/NOR -> R16-2
+    connect(8, 2, 7, 1, false); // MEX/ECU -> R16-4
+    connect(8, 3, 7, 1, false); // ENG/COD -> R16-4
+    
+    connect(8, 4, 7, 2, false); // ARG/CPV -> R16-8
+    connect(8, 5, 7, 2, false); // SUI/ALG -> R16-8
+    connect(8, 6, 7, 3, false); // COL/GHA -> R16-7
+    connect(8, 7, 7, 3, false); // AUS/EGY -> R16-7
+
+    // Column 7 (R16 R) -> QF
+    connect(7, 1, 6, 0, false); // Right R16 Row 1 (R16-4) -> Right QF Row 0 (QF-3)
+    connect(7, 2, 6, 1, false); // Right R16 Row 2 (R16-8) -> Right QF Row 1 (QF-4)
+    connect(7, 3, 6, 1, false); // Right R16 Row 3 (R16-7) -> Right QF Row 1 (QF-4)
+
+    // QF Right -> SF Right
+    connect(6, 0, 5, 0, false); // Right QF Row 0 (QF-3) -> Right SF (SF-2)
+    connect(6, 1, 5, 0, false); // Right QF Row 1 (QF-4) -> Right SF (SF-2)
+
+    // SF Right -> Center (Final)
     connect(5, 0, 4, 0, false);
+
+    // ── CROSSING CONNECTIONS ──
+    // Right R16 Row 0 (R16-2) -> Left QF Row 0 (QF-1)
+    connect(7, 0, 2, 0, false); // From Right R16-2 to Left QF-1
+    // Left R16 Row 0 (R16-3) -> Right QF Row 0 (QF-3)
+    connect(1, 0, 6, 0, true);  // From Left R16-3 to Right QF-3
 
     svg.innerHTML = paths.join("");
   }
@@ -337,14 +359,14 @@ const BracketAPI = (() => {
 
     // ── MAPPING MATCHES TO SLOTS ──
     // Left Columns
-    const r32_L = [r32[2], r32[0], r32[4], r32[1], r32[11], r32[10], r32[9], r32[8]];
-    const r16_L = [r16[0], r16[1], r16[4], r16[5]];
+    const r32_L = [r32[5], r32[3], r32[0], r32[2], r32[11], r32[10], r32[9], r32[8]];
+    const r16_L = [r16[2], r16[0], r16[4], r16[5]];
     const qf_L = [qf[0], qf[1]];
     const sf_L = [sf[0]];
 
     // Right Columns
-    const r32_R = [r32[5], r32[3], r32[7], r32[6], r32[14], r32[12], r32[15], r32[13]];
-    const r16_R = [r16[2], r16[3], r16[7], r16[6]];
+    const r32_R = [r32[1], r32[4], r32[6], r32[7], r32[14], r32[12], r32[15], r32[13]];
+    const r16_R = [r16[1], r16[3], r16[7], r16[6]];
     const qf_R = [qf[2], qf[3]];
     const sf_R = [sf[1]];
 
