@@ -102,11 +102,52 @@ function initLenis() {
   });
 }
 
+// ── Groups/Bracket Tabs ──
+function initGroupsTabs() {
+  const tabsContainer = document.getElementById("groups-tabs");
+  if (!tabsContainer) return;
+
+  const titleEl = document.getElementById("groups-section-title");
+  const bracketEl = document.getElementById("bracket-container");
+  const gridEl = document.getElementById("groups-grid");
+
+  tabsContainer.querySelectorAll(".groups-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      // Deactivate all buttons
+      tabsContainer.querySelectorAll(".groups-tab-btn").forEach(b => {
+        b.classList.remove("groups-tab-btn--active");
+      });
+
+      // Activate clicked
+      btn.classList.add("groups-tab-btn--active");
+
+      const tab = btn.getAttribute("data-tab");
+      if (tab === "bracket") {
+        if (titleEl) titleEl.textContent = "Tournament Bracket";
+        if (bracketEl) bracketEl.style.display = "block";
+        if (gridEl) gridEl.style.display = "none";
+        if (typeof BracketAPI !== "undefined") {
+          BracketAPI.render();
+          BracketAPI.scale();
+        }
+      } else {
+        if (titleEl) titleEl.textContent = "Group Standings";
+        if (bracketEl) bracketEl.style.display = "none";
+        if (gridEl) gridEl.style.display = "grid";
+      }
+    });
+  });
+}
+
 async function boot() {
   await loadFixturesData();
   initDateNavigation();
   renderFixtures();
   loadGroupStandings();
+  initGroupsTabs();
+  if (typeof BracketAPI !== "undefined") {
+    BracketAPI.render();
+  }
   loadTopScorers();
   LiveData.start();
 }
@@ -583,7 +624,9 @@ async function loadFixturesData(opts = {}) {
           score1: m.home.score,
           score2: m.away.score,
           utcDate: m.utcDate,
-          displayClock: m.displayClock || null
+          displayClock: m.displayClock || null,
+          home: m.home,
+          away: m.away
         });
       });
     });
@@ -816,6 +859,9 @@ const LiveData = (() => {
       renderFixtures();
     }
     await loadGroupStandings({ force: true });
+    if (typeof BracketAPI !== "undefined") {
+      BracketAPI.render();
+    }
     await loadTopScorers();
   }
 

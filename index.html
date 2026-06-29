@@ -304,22 +304,31 @@
     </div>
   </section>
 
-  <!-- ── Group Standings ── -->
+  <!-- ── Group Standings / Tournament Bracket ── -->
   <section class="groups-section" id="groups" data-reveal>
     <div class="container">
       <div class="section-header">
         <div>
           <p class="section-eyebrow">FIFA World Cup 2026</p>
-          <h2 class="section-title">Group Standings</h2>
+          <h2 class="section-title" id="groups-section-title">Tournament Bracket</h2>
         </div>
-        <div class="section-meta">
+        <div class="section-meta" style="display: flex; gap: var(--sp-sm); align-items: center;">
+          <div class="groups-tabs" id="groups-tabs">
+            <button class="groups-tab-btn groups-tab-btn--active" data-tab="bracket">Knockout Tree</button>
+            <button class="groups-tab-btn" data-tab="standings">Group Standings</button>
+          </div>
           <span id="standings-source" class="data-source"></span>
         </div>
       </div>
       
       <!-- Groups Grid -->
-      <div class="groups-grid" id="groups-grid">
+      <div class="groups-grid" id="groups-grid" style="display: none;">
         <!-- Dynamic group tables will be injected here -->
+      </div>
+
+      <!-- Tournament Bracket Container -->
+      <div class="bracket-container" id="bracket-container">
+        <!-- Dynamic bracket will be injected here -->
       </div>
     </div>
   </section>
@@ -401,6 +410,7 @@
   <script src="assets/js/sheets.js?v=1.1.1"></script>
   <script src="assets/js/leaderboard.js?v=1.1.1"></script>
   <script src="assets/js/parallax.js?v=1.1.1"></script>
+  <script src="assets/js/bracket.js?v=1.1.1"></script>
   <script src="assets/js/app.js?v=1.1.1"></script>
   <!-- Painted hero background (ES module; pulls Three.js from jsDelivr) -->
   <script type="module" src="assets/js/fx-background.js?v=1.1.1"></script>

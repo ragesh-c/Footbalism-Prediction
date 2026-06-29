@@ -2,6 +2,7 @@
   "name": "footbalism-wc26",
   "version": "1.0.0",
   "scripts": {
-    "build": "node generate-config.js"
+    "build": "node generate-config.js",
+    "dev": "node dev-server.js"
   }
 }
