@@ -162,14 +162,14 @@ const BracketAPI = (() => {
 
       const pRect = {
         x: colPositions[colStart].left,
-        y: parentCard.offsetTop,
+        y: colPositions[colStart].top + parentCard.offsetTop,
         w: parentCard.offsetWidth,
         h: parentCard.offsetHeight
       };
 
       const cRect = {
         x: colPositions[colEnd].left,
-        y: childCard.offsetTop,
+        y: colPositions[colEnd].top + childCard.offsetTop,
         w: childCard.offsetWidth,
         h: childCard.offsetHeight
       };
@@ -298,13 +298,34 @@ const BracketAPI = (() => {
     const finalMatches = filterRound(["final"]);
     const thirdPlaceMatches = filterRound(["third place", "3rd-place-match", "third place playoff"]);
 
-    // Sort chronologically using utcDate
+    // Sort chronologically using a robust date parser that works for both live and static fallback data
+    const getComparableDate = (m) => {
+      if (m.utcDate && !m.utcDate.endsWith("T00:00:00Z")) {
+        return new Date(m.utcDate).getTime();
+      }
+      if (m.istDate) {
+        const parts = m.istDate.split(" ");
+        const month = parts[0] === "Jun" ? 5 : 6;
+        const day = parseInt(parts[1]) || 1;
+        
+        let hours = 0;
+        let minutes = 0;
+        if (m.istTime) {
+          const timeParts = m.istTime.split(" ");
+          const hm = timeParts[0].split(":");
+          hours = parseInt(hm[0]) || 0;
+          minutes = parseInt(hm[1]) || 0;
+          if (timeParts[1] === "PM" && hours < 12) hours += 12;
+          if (timeParts[1] === "AM" && hours === 12) hours = 0;
+        }
+        
+        return new Date(2026, month, day, hours, minutes).getTime();
+      }
+      return 0;
+    };
+
     const sortByDate = (arr) => {
-      return arr.sort((a, b) => {
-        const dateA = a.utcDate ? new Date(a.utcDate) : new Date(0);
-        const dateB = b.utcDate ? new Date(b.utcDate) : new Date(0);
-        return dateA - dateB;
-      });
+      return arr.sort((a, b) => getComparableDate(a) - getComparableDate(b));
     };
 
     sortByDate(r32);
