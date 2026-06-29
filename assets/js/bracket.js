@@ -43,6 +43,47 @@ const BracketAPI = (() => {
     "South Korea": "KOR"
   };
 
+  const FLAG_MAP = {
+    "brazil": "🇧🇷",
+    "japan": "🇯🇵",
+    "ivory coast": "🇨🇮",
+    "côte d'ivoire": "🇨🇮",
+    "cote d'ivoire": "🇨🇮",
+    "norway": "🇳🇴",
+    "mexico": "🇲🇽",
+    "ecuador": "🇪🇨",
+    "england": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "congo dr": "🇨🇩",
+    "dr congo": "🇨🇩",
+    "germany": "🇩🇪",
+    "paraguay": "🇵🇾",
+    "france": "🇫🇷",
+    "sweden": "🇸🇪",
+    "south africa": "🇿🇦",
+    "canada": "🇨🇦",
+    "netherlands": "🇳🇱",
+    "morocco": "🇲🇦",
+    "portugal": "🇵🇹",
+    "croatia": "🇭🇷",
+    "spain": "🇪🇸",
+    "austria": "🇦🇹",
+    "united states": "🇺🇸",
+    "usa": "🇺🇸",
+    "bosnia-herzegovina": "🇧🇦",
+    "bosnia and herzegovina": "🇧🇦",
+    "belgium": "🇧🇪",
+    "senegal": "🇸🇳",
+    "switzerland": "🇨🇭",
+    "algeria": "🇩🇿",
+    "colombia": "🇨🇴",
+    "ghana": "🇬🇭",
+    "australia": "🇦🇺",
+    "egypt": "🇪🇬",
+    "argentina": "🇦🇷",
+    "cape verde": "🇨🇻",
+    "cabo verde": "🇨🇻"
+  };
+
   function escapeHtml(str) {
     return String(str ?? "")
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -50,13 +91,24 @@ const BracketAPI = (() => {
   }
 
   function renderFlag(flag, name) {
-    if (!name || name === "TBD" || flag === "🏳️" || !flag || name.startsWith("Round of 32") || name.startsWith("Round of 16") || name.startsWith("Quarter") || name.startsWith("Semi")) {
+    if (!name || name === "TBD" || name.startsWith("Round of 32") || name.startsWith("Round of 16") || name.startsWith("Quarter") || name.startsWith("Semi")) {
       return `<div class="bracket-team-flag--tbd"></div>`;
     }
-    if (typeof getFlagImgHtml === "function") {
-      return getFlagImgHtml(flag);
+    
+    let resolvedFlag = flag;
+    if (!flag || flag === "🏳️") {
+      const key = name.toLowerCase().trim();
+      resolvedFlag = FLAG_MAP[key] || "🏳️";
     }
-    return flag;
+
+    if (resolvedFlag === "🏳️") {
+      return `<div class="bracket-team-flag--tbd"></div>`;
+    }
+
+    if (typeof getFlagImgHtml === "function") {
+      return getFlagImgHtml(resolvedFlag);
+    }
+    return resolvedFlag;
   }
 
   function renderName(name) {
@@ -360,8 +412,8 @@ const BracketAPI = (() => {
         ...def,
         matchObj: m,
         winner: winner,
-        flag1: m ? m.flag1 : "🏳️",
-        flag2: m ? m.flag2 : "🏳️",
+        flag1: (m && m.flag1 && m.flag1 !== "🏳️") ? m.flag1 : (FLAG_MAP[def.team1.toLowerCase()] || "🏳️"),
+        flag2: (m && m.flag2 && m.flag2 !== "🏳️") ? m.flag2 : (FLAG_MAP[def.team2.toLowerCase()] || "🏳️"),
         team1Display: m ? m.team1 : def.team1,
         team2Display: m ? m.team2 : def.team2,
         score1: m ? m.score1 : null,
